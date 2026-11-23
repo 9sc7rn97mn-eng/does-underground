@@ -496,6 +496,7 @@ function openBooking(roomId){
     '</select>'+
     '<div class="today-bookings" id="fBooked"></div>'+
     '<div class="deposit-box" id="fDeposit" aria-live="polite"></div>'+
+    '<div class="deposit-box" id="fPoints"><b>كل حجز مقبول = 50 نقطة</b><div class="note">النقاط بتتضاف بعد ما المكان يقبل الحجز، مش بمجرد إرسال الطلب. اكتب رقم موبايل مصري صحيح عشان تتحسبلك.</div></div>'+
     '<div class="conflict" id="fConflict"></div>'+
     '<div id="fWait" hidden class="deposit-box"><b>المعاد ده محجوز</b><p>سجل اسمك ورقمك، ولو المعاد فضي المكان يقدر يكلمك على واتساب. دي قائمة انتظار، مش حجز أو ضمان للتوفر. متحولش عربون.</p><button id="waitJoinBtn" class="btn ghost" onclick="joinWaitlist()">سجل في قائمة الانتظار</button></div>'+
     '<div style="margin-top:18px"><button id="fSubmit" class="btn" onclick="submitBooking()">ابعت طلب الحجز</button></div>'+
@@ -537,7 +538,7 @@ function checkConflict(){
   const hours=parseInt(document.getElementById('fHours').value);
   if(!date||!start) return true;
   const hit = conflictHit(bookingRoom.id, date, start, hours);
-  const wb=document.getElementById('fWait'),sb=document.getElementById('fSubmit'),dp=document.getElementById('fDeposit');if(wb)wb.hidden=!hit;if(sb)sb.hidden=!!hit;if(dp)dp.hidden=!!hit;
+  const wb=document.getElementById('fWait'),sb=document.getElementById('fSubmit'),dp=document.getElementById('fDeposit');if(wb)wb.hidden=!hit;if(sb)sb.hidden=!!hit;if(dp)dp.hidden=!!hit;const pn=document.getElementById('fPoints');if(pn)pn.hidden=!!hit;
   if(hit){ c.style.display='block'; c.textContent=conflictMsg(bookingRoom.name, hit); return false; }
   c.style.display='none'; return true;
 }
