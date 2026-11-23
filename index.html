@@ -273,16 +273,30 @@ function nextBookingToday(roomId){
 }
 
 /* ============ STORE (shared cloud JSON, single object to save requests) ============ */
+function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
 async function loadState(){
-  const r = await fetch(API+'/'+STATE_ID);
-  if(!r.ok) throw new Error('get '+r.status);
-  const j = await r.json();
-  return (j && j.data) || {};
+  let lastErr;
+  for(let i=0;i<3;i++){
+    try{
+      const r = await fetch(API+'/'+STATE_ID, {cache:'no-store'});
+      if(!r.ok) throw new Error('get '+r.status);
+      const j = await r.json();
+      return (j && j.data) || {};
+    }catch(e){ lastErr=e; if(i<2) await sleep(500*(i+1)); }
+  }
+  throw lastErr;
 }
 async function putState(data){
-  const r = await fetch(API+'/'+STATE_ID, {method:'PUT', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({name:'dug-x7k2f3q9-state', data})});
-  if(!r.ok) throw new Error('put '+r.status);
+  let lastErr;
+  for(let i=0;i<3;i++){
+    try{
+      const r = await fetch(API+'/'+STATE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, cache:'no-store',
+        body: JSON.stringify({name:'dug-x7k2f3q9-state', data})});
+      if(!r.ok) throw new Error('put '+r.status);
+      return;
+    }catch(e){ lastErr=e; if(i<2) await sleep(600*(i+1)); }
+  }
+  throw lastErr;
 }
 function localState(){ return {rooms:roomState, reqs:requests, books:{list:bookings}, ads, roomCfg:roomCfgMap, admin:adminCreds}; }
 async function syncNow(){
@@ -574,10 +588,14 @@ async function saveCreds(){
   try{ await putState(localState()); toast('اتحفظت ✔'); }catch(e){ toast('مشكلة اتصال — جرب تاني'); }
 }
 function leaveAdmin(){ sessionStorage.removeItem('dugAdmin'); location.hash=''; location.reload(); }
-function tryLogin(){
+async function tryLogin(){
   const u=(document.getElementById('loginU').value||'').trim();
   const p=(document.getElementById('loginP').value||'').trim();
-  if(!online){ document.getElementById('loginErr').textContent='لسه بيحمّل… جرب تاني بعد ثواني'; return; }
+  if(!online){
+    document.getElementById('loginErr').textContent='ثانية واحدة… بنتصل بالسيرفر';
+    await syncNow();
+  }
+  if(!online){ document.getElementById('loginErr').textContent='مفيش اتصال بالسيرفر دلوقتي — جرب تاني بعد ثواني'; return; }
   if(u===adminCreds.u && p===adminCreds.p){
     sessionStorage.setItem('dugAdmin','1'); adminOk=true;
     document.getElementById('loginWall').style.display='none';
