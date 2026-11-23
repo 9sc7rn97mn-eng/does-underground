@@ -371,7 +371,7 @@ async function submitBooking(){
       requests = reqs; sent = true; updateReqCount();
     }catch(e){ sent = false; }
   }
-  const waText = encodeURIComponent('حجز DOES Underground\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+start+'\nعدد الساعات: '+hours);
+  const waText = encodeURIComponent('حجز DOES Underground\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours);
   document.getElementById('modal').innerHTML =
     '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت!</h4>'+
     (sent ? '<p>'+bookingRoom.name+' — '+date+' من '+fmtTime(start)+' ('+hours+(hours===1?' ساعة':' ساعات')+')<br>المكان هيأكد حجزك. للتأكيد الفوري ابعتلهم واتساب:</p>' : '<p>الاتصال ضعيف — ابعت حجزك واتساب على طول:</p>')+
