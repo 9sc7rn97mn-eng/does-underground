@@ -207,8 +207,9 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
 /* ============ CONFIG ============ */
 const ADMIN_HASH = '#dug7-admin-x9k2';
 const WA_NUMBER = '201063436643';
-const API = 'https://api.restful-api.dev/objects';
-const STATE_ID = 'ff808181a09d98f701a2068752812072';
+const SUPA_URL = 'https://vjvwjnnlmcofeufawnqq.supabase.co';
+const SUPA_KEY = 'sb_publishable_nzJJp96sUGVPMCs_bDUmoQ_13hM7juc';
+const SUPA_H = {apikey: SUPA_KEY, Authorization: 'Bearer '+SUPA_KEY};
 const ROOMS = [
   {id:'marvel',  name:'Room Marvel',     cat:'ps',  type:'PS4', price:40},
   {id:'porsche', name:'Room Porsche',    cat:'ps',  type:'PS4', price:40},
@@ -278,10 +279,10 @@ async function loadState(){
   let lastErr;
   for(let i=0;i<3;i++){
     try{
-      const r = await fetch(API+'/'+STATE_ID, {cache:'no-store'});
+      const r = await fetch(SUPA_URL+'/rest/v1/dug_state?id=eq.1&select=data', {cache:'no-store', headers: SUPA_H});
       if(!r.ok) throw new Error('get '+r.status);
       const j = await r.json();
-      return (j && j.data) || {};
+      return (j && j[0] && j[0].data) || {};
     }catch(e){ lastErr=e; if(i<2) await sleep(500*(i+1)); }
   }
   throw lastErr;
@@ -290,8 +291,9 @@ async function putState(data){
   let lastErr;
   for(let i=0;i<3;i++){
     try{
-      const r = await fetch(API+'/'+STATE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, cache:'no-store',
-        body: JSON.stringify({name:'dug-x7k2f3q9-state', data})});
+      const r = await fetch(SUPA_URL+'/rest/v1/dug_state', {method:'POST', cache:'no-store',
+        headers: Object.assign({'Content-Type':'application/json', Prefer:'resolution=merge-duplicates'}, SUPA_H),
+        body: JSON.stringify({id:1, data})});
       if(!r.ok) throw new Error('put '+r.status);
       return;
     }catch(e){ lastErr=e; if(i<2) await sleep(600*(i+1)); }
@@ -440,30 +442,34 @@ async function submitBooking(){
   if(!checkConflict()) return;
   const req = {id:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
     room:bookingRoom.id, name, phone, note, date, start, hours, ts:Date.now()};
-  let sent = false;
-  if(online){
-    try{
-      const fresh = await loadState();
-      const freshBooks = (fresh.books&&fresh.books.list)||[];
-      bookings = freshBooks;
-      const hit = conflictHit(bookingRoom.id, date, start, hours, freshBooks);
-      if(hit){
-        const c=document.getElementById('fConflict');
-        c.style.display='block'; c.textContent=conflictMsg(bookingRoom.name, hit);
-        renderBookedInModal();
-        return;
-      }
-      const reqs = fresh.reqs||{};
-      reqs[req.id] = req;
-      fresh.reqs = reqs;
-      await putState(fresh);
-      requests = reqs; sent = true; updateReqCount();
-    }catch(e){ sent = false; }
+  function serverBusy(){
+    const c=document.getElementById('fConflict');
+    c.style.display='block'; c.textContent='السيرفر مش متاح دلوقتي — حاول تاني كمان شوية';
   }
+  if(!online){ serverBusy(); return; }
+  let fresh;
+  try{ fresh = await loadState(); }
+  catch(e){ serverBusy(); return; }
+  const freshBooks = (fresh.books&&fresh.books.list)||[];
+  bookings = freshBooks;
+  const hit = conflictHit(bookingRoom.id, date, start, hours, freshBooks);
+  if(hit){
+    const c=document.getElementById('fConflict');
+    c.style.display='block'; c.textContent=conflictMsg(bookingRoom.name, hit);
+    renderBookedInModal();
+    return;
+  }
+  const reqs = fresh.reqs||{};
+  reqs[req.id] = req;
+  fresh.reqs = reqs;
+  try{ await putState(fresh); }
+  catch(e){ serverBusy(); return; }
+  requests = reqs; updateReqCount();
+  const sent = true;
   const waText = encodeURIComponent('حجز DOES Underground\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours+(note?('\nملاحظات: '+note):''));
   document.getElementById('modal').innerHTML =
     '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت!</h4>'+
-    (sent ? '<p>'+bookingRoom.name+' — '+date+' من '+fmtTime(start)+' ('+hours+(hours===1?' ساعة':' ساعات')+')<br>المكان هيأكد حجزك. للتأكيد الفوري ابعتلهم واتساب:</p>' : '<p>الاتصال ضعيف — ابعت حجزك واتساب على طول:</p>')+
+    '<p>'+bookingRoom.name+' — '+date+' من '+fmtTime(start)+' ('+hours+(hours===1?' ساعة':' ساعات')+')<br>المكان هيأكد حجزك. للتأكيد الفوري ابعتلهم واتساب:</p>'+
     '<a class="btn green" style="text-decoration:none" href="https://wa.me/'+WA_NUMBER+'?text='+waText+'" target="_blank" rel="noopener">تأكيد على واتساب</a>'+
     '<button class="btn ghost" style="margin-top:10px" onclick="closeModal()">تمام</button></div>';
 }
