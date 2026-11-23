@@ -141,6 +141,7 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
 .hidden{display:none !important}
 .toast{position:fixed; bottom:70px; right:50%; transform:translateX(50%); background:#0e2a1d; border:1px solid #2ee6a855; color:var(--ok); padding:10px 22px; border-radius:999px; font-size:14px; z-index:99; display:none; box-shadow:0 6px 24px #00000088}
 .deposit-box{background:#171b2c;border:1px solid #6552aa;border-radius:12px;padding:14px;margin-top:14px;line-height:1.9;text-align:right}.deposit-status{display:inline-block;color:#f6d58a;font-size:13px;margin-top:6px}.success .deposit-box{text-align:center}
+.location-section{display:grid;grid-template-columns:1fr 1.2fr;gap:24px;align-items:center;margin:34px auto;padding:22px;background:#0d1120;border:1px solid #303654;border-radius:18px;max-width:900px}.location-section h2{margin-top:0}.location-copy p{color:#c4c9dc;line-height:1.9;margin:14px 0 20px}.location-section iframe{width:100%;height:310px;border:0;border-radius:12px;background:#171b2c}@media(max-width:650px){.location-section{grid-template-columns:1fr;margin:28px 12px;padding:18px}.location-section iframe{height:280px}}
 </style>
 </head>
 <body>
@@ -170,7 +171,13 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
     <div class="note">رأيك بيوصل لصاحب المكان بس على واتساب، محدش تاني بيشوفه.</div>
   </div>
 
-  <footer>
+  <section class="location-section" id="location">
+  <div class="location-copy"><h2><span class="bar"></span>مكاننا في دمنهور</h2>
+  <p>دمنهور، أول الكوبري العلوي، أمام مديرية الصحة، مكان XO القديم</p>
+  <a class="btn" href="https://maps.google.com/?q=31.044785,30.463911" target="_blank" rel="noopener" style="text-decoration:none">افتح الاتجاهات على خرائط جوجل</a></div>
+  <iframe title="مكان DOES Underground في دمنهور" src="https://maps.google.com/maps?q=31.044785,30.463911&amp;z=17&amp;output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+</section>
+<footer>
     للحجز السريع أو أي استفسار
     <br>
     <a class="wa" href="https://wa.me/201063436643" target="_blank" rel="noopener">واتساب: ‎0106 343 6643‎</a>
