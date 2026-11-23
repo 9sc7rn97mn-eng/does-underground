@@ -358,7 +358,7 @@ function openBooking(roomId){
     '<div class="sub">'+bookingRoom.type+(bookingRoom.vip?' • VIP':'')+' — '+bookingRoom.price+' جنيه/الساعة</div>'+
     '<label>الاسم</label><input id="fName" placeholder="اسمك" maxlength="40">'+
     '<label>رقم الموبايل</label><input id="fPhone" inputmode="tel" placeholder="01xxxxxxxxx" maxlength="14">'+
-    '<label>ملاحظات (اختياري)</label><input id="fNote" placeholder="أي طلب أو ملاحظة للمكان" maxlength="200">'+
+    '<label>ملاحظات (اختياري)</label><input id="fNote" placeholder="ضيف ملاحظاتك او لو حابب نجهزلك حاجه معينه" maxlength="200">'+
     '<div class="row2"><div><label>اليوم</label><input id="fDate" type="date" value="'+td+'" min="'+td+'"></div>'+
     '<div><label>من الساعة</label><select id="fStart">'+
       Array.from({length:24},(_,h)=>{ const v=String(h).padStart(2,'0')+':00'; return '<option value="'+v+'"'+(h===18?' selected':'')+'>'+fmtTime(v)+'</option>'; }).join('')+
