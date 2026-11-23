@@ -358,6 +358,7 @@ function openBooking(roomId){
     '<div class="sub">'+bookingRoom.type+(bookingRoom.vip?' • VIP':'')+' — '+bookingRoom.price+' جنيه/الساعة</div>'+
     '<label>الاسم</label><input id="fName" placeholder="اسمك" maxlength="40">'+
     '<label>رقم الموبايل</label><input id="fPhone" inputmode="tel" placeholder="01xxxxxxxxx" maxlength="14">'+
+    '<label>ملاحظات (اختياري)</label><input id="fNote" placeholder="أي طلب أو ملاحظة للمكان" maxlength="200">'+
     '<div class="row2"><div><label>اليوم</label><input id="fDate" type="date" value="'+td+'" min="'+td+'"></div>'+
     '<div><label>من الساعة</label><select id="fStart">'+
       Array.from({length:24},(_,h)=>{ const v=String(h).padStart(2,'0')+':00'; return '<option value="'+v+'"'+(h===18?' selected':'')+'>'+fmtTime(v)+'</option>'; }).join('')+
@@ -409,6 +410,7 @@ function checkConflict(){
 async function submitBooking(){
   const name=document.getElementById('fName').value.trim();
   const phone=document.getElementById('fPhone').value.trim();
+  const note=document.getElementById('fNote').value.trim();
   const date=document.getElementById('fDate').value;
   const start=document.getElementById('fStart').value;
   const hours=parseInt(document.getElementById('fHours').value);
@@ -416,7 +418,7 @@ async function submitBooking(){
   if(!date||!start){ alert('اختار اليوم والساعة'); return; }
   if(!checkConflict()) return;
   const req = {id:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
-    room:bookingRoom.id, name, phone, date, start, hours, ts:Date.now()};
+    room:bookingRoom.id, name, phone, note, date, start, hours, ts:Date.now()};
   let sent = false;
   if(online){
     try{
@@ -437,7 +439,7 @@ async function submitBooking(){
       requests = reqs; sent = true; updateReqCount();
     }catch(e){ sent = false; }
   }
-  const waText = encodeURIComponent('حجز DOES Underground\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours);
+  const waText = encodeURIComponent('حجز DOES Underground\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours+(note?('\nملاحظات: '+note):''));
   document.getElementById('modal').innerHTML =
     '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت!</h4>'+
     (sent ? '<p>'+bookingRoom.name+' — '+date+' من '+fmtTime(start)+' ('+hours+(hours===1?' ساعة':' ساعات')+')<br>المكان هيأكد حجزك. للتأكيد الفوري ابعتلهم واتساب:</p>' : '<p>الاتصال ضعيف — ابعت حجزك واتساب على طول:</p>')+
@@ -464,7 +466,7 @@ function renderAdmin(){
   if(!reqs.length) reqHtml += '<div class="note">مفيش طلبات مستنية.</div>';
   for(const q of reqs){
     const r = roomById(q.room);
-    reqHtml += '<div class="req"><div><b>'+esc(q.name)+'</b> — '+r.name+'<br><span style="color:var(--dim);font-size:12.5px">'+q.date+' من '+fmtTime(q.start)+' ('+q.hours+' س)'+(q.phone?(' — '+esc(q.phone)):'')+'</span></div>'+
+    reqHtml += '<div class="req"><div><b>'+esc(q.name)+'</b> — '+r.name+'<br><span style="color:var(--dim);font-size:12.5px">'+q.date+' من '+fmtTime(q.start)+' ('+q.hours+' س)'+(q.phone?(' — '+esc(q.phone)):'')+(q.note?('<br>📝 '+esc(q.note)):'')+'</span></div>'+
       '<div class="acts"><button class="btn small green" onclick="acceptReq(\''+q.id+'\')">قبول</button>'+
       '<button class="btn small red" onclick="declineReq(\''+q.id+'\')">رفض</button></div></div>';
   }
@@ -486,7 +488,7 @@ function renderAdmin(){
   if(!tb.length) bkHtml += '<div class="note">مفيش حجوزات النهارده لسه.</div>';
   for(const b of tb){
     const r = roomById(b.room);
-    bkHtml += '<div class="bk"><span><b>'+fmtTime(b.start)+'</b> — '+r.name+' — '+esc(b.name)+(b.phone?(' ('+esc(b.phone)+')'):'')+' — '+b.hours+' س</span>'+
+    bkHtml += '<div class="bk"><span><b>'+fmtTime(b.start)+'</b> — '+r.name+' — '+esc(b.name)+(b.phone?(' ('+esc(b.phone)+')'):'')+' — '+b.hours+' س'+(b.note?(' — 📝 '+esc(b.note)):'')+'</span>'+
       '<button class="del" onclick="delBooking(\''+b.id+'\')">✕</button></div>';
   }
   bkHtml += '<div style="margin-top:12px"><button class="btn small ghost" onclick="clearOldBookings()">مسح الحجوزات القديمة (قبل النهارده)</button></div>';
@@ -538,7 +540,7 @@ async function acceptReq(id){
   const q = requests[id]; if(!q) return;
   const hit = conflictHit(q.room, q.date, q.start, q.hours);
   if(hit){ toast('مينفعش — '+conflictMsg(roomById(q.room).name, hit)); return; }
-  bookings.push({id:q.id, room:q.room, name:q.name, phone:q.phone, date:q.date, start:q.start, hours:q.hours});
+  bookings.push({id:q.id, room:q.room, name:q.name, phone:q.phone, note:q.note||'', date:q.date, start:q.start, hours:q.hours});
   delete requests[id];
   await saveBooks();
   toast('اتأكد الحجز ✔'); renderAll();
