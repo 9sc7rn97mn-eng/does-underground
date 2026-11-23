@@ -140,6 +140,7 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
 .del{background:none; border:none; color:var(--busy); cursor:pointer; font-size:16px; padding:4px 8px}
 .hidden{display:none !important}
 .toast{position:fixed; bottom:70px; right:50%; transform:translateX(50%); background:#0e2a1d; border:1px solid #2ee6a855; color:var(--ok); padding:10px 22px; border-radius:999px; font-size:14px; z-index:99; display:none; box-shadow:0 6px 24px #00000088}
+.deposit-box{background:#171b2c;border:1px solid #6552aa;border-radius:12px;padding:14px;margin-top:14px;line-height:1.9;text-align:right}.deposit-status{display:inline-block;color:#f6d58a;font-size:13px;margin-top:6px}.success .deposit-box{text-align:center}
 </style>
 </head>
 <body>
@@ -207,6 +208,14 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
 /* ============ CONFIG ============ */
 const ADMIN_HASH = '#dug7-admin-x9k2';
 const WA_NUMBER = '201063436643';
+const DEPOSIT_NUMBER = '01012423094';
+function money(n){ return Number(n).toLocaleString('en-US',{maximumFractionDigits:2})+' جنيه'; }
+function bookingAmounts(rate,hours){ const total=Math.round(Number(rate)*Number(hours)*100)/100; return {total,deposit:Math.round(total*50)/100}; }
+function renderDeposit(){
+ const el=document.getElementById('fDeposit'); if(!el||!bookingRoom)return;
+ const a=bookingAmounts(bookingRoom.price,document.getElementById('fHours').value);
+ el.innerHTML='<b>إجمالي الحجز: '+money(a.total)+'</b><br>العربون (50%): <b>'+money(a.deposit)+'</b><br>فودافون كاش: <b dir="ltr">'+DEPOSIT_NUMBER+'</b><div class="note">ابعت الطلب الأول، وبعدها هتظهرلك خطوات تحويل العربون. الحجز مش مؤكد غير بعد مراجعة المكان.</div>';
+}
 const SUPA_URL = 'https://vjvwjnnlmcofeufawnqq.supabase.co';
 const SUPA_KEY = 'sb_publishable_nzJJp96sUGVPMCs_bDUmoQ_13hM7juc';
 const SUPA_H = {apikey: SUPA_KEY, Authorization: 'Bearer '+SUPA_KEY};
@@ -400,12 +409,15 @@ function openBooking(roomId){
       [1,2,3,4,5,6].map(h=>'<option value="'+h+'"'+(h===2?' selected':'')+'>'+h+(h===1?' ساعة':' ساعات')+'</option>').join('')+
     '</select>'+
     '<div class="today-bookings" id="fBooked"></div>'+
+    '<div class="deposit-box" id="fDeposit" aria-live="polite"></div>'+
     '<div class="conflict" id="fConflict"></div>'+
     '<div style="margin-top:18px"><button class="btn" onclick="submitBooking()">ابعت طلب الحجز</button></div>'+
     '<button class="btn ghost" style="margin-top:10px" onclick="closeModal()">إلغاء</button>'+
-    '<div class="note">طلبك بيوصل للمكان على طول وهما بيأكدوه. عايز تأكيد أسرع؟ ابعتلهم واتساب بعد ما تبعت الطلب.</div>';
+    '<div class="note">الحجز بيتأكد من المكان بعد مراجعة العربون وتوفر المعاد.</div>';
   ['fDate','fStart','fHours'].forEach(id=>document.getElementById(id).addEventListener('change', checkConflict));
   document.getElementById('fDate').addEventListener('change', renderBookedInModal);
+  document.getElementById('fHours').addEventListener('change',renderDeposit);
+  renderDeposit();
   document.getElementById('overlay').classList.add('open');
   renderBookedInModal();
   checkConflict();
@@ -470,12 +482,17 @@ async function submitBooking(){
     }
     serverBusy(); return;
   }
-  const sent = true;
-  const waText = encodeURIComponent('حجز DOES Underground\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours+(note?('\nملاحظات: '+note):''));
+  const total=Number(res.totalAmount), deposit=Number(res.depositAmount);
+  if(!Number.isFinite(total)||!Number.isFinite(deposit)||res.depositNumber!==DEPOSIT_NUMBER){
+    document.getElementById('modal').innerHTML='<div class="success"><h4>طلبك اتبعت، ومستني مراجعة المكان</h4><p>تعذر عرض مبلغ العربون. متحولش فلوس قبل ما تتأكد من المكان.</p><button class="btn ghost" onclick="closeModal()">تمام</button></div>'; return;
+  }
+  const waText = encodeURIComponent('طلب حجز DOES Underground\nرقم الطلب: '+res.id+'\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours+'\nإجمالي الحجز: '+money(total)+'\nالعربون المطلوب (50%): '+money(deposit)+'\nهرفق صورة تحويل العربون للمراجعة'+(note?('\nملاحظات: '+note):''));
   document.getElementById('modal').innerHTML =
-    '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت!</h4>'+
-    '<p>'+bookingRoom.name+' — '+date+' من '+fmtTime(start)+' ('+hours+(hours===1?' ساعة':' ساعات')+')<br>المكان هيأكد حجزك. للتأكيد الفوري ابعتلهم واتساب:</p>'+
-    '<a class="btn green" style="text-decoration:none" href="https://wa.me/'+WA_NUMBER+'?text='+waText+'" target="_blank" rel="noopener">تأكيد على واتساب</a>'+
+    '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت، في انتظار العربون</h4>'+
+    '<p>'+bookingRoom.name+' · '+date+' من '+fmtTime(start)+' ('+hours+' س)</p>'+
+    '<div class="deposit-box"><b>إجمالي الحجز: '+money(total)+'</b><br>العربون (50%): <b>'+money(deposit)+'</b><br>حوّل العربون بفودافون كاش على<br><b dir="ltr" style="font-size:22px">'+DEPOSIT_NUMBER+'</b></div>'+
+    '<p>بعد التحويل، ابعت صورة العملية على واتساب المكان. الحجز مش مؤكد لحد ما المكان يراجع التحويل ويأكد المعاد. فتح واتساب لوحده مش تأكيد للدفع.</p>'+
+    '<a class="btn green" style="text-decoration:none" href="https://wa.me/'+WA_NUMBER+'?text='+waText+'" target="_blank" rel="noopener">ابعت صورة التحويل على واتساب</a>'+
     '<button class="btn ghost" style="margin-top:10px" onclick="closeModal()">تمام</button></div>';
 }
 document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
@@ -498,8 +515,9 @@ function renderAdmin(){
   if(!reqs.length) reqHtml += '<div class="note">مفيش طلبات مستنية.</div>';
   for(const q of reqs){
     const r = roomById(q.room);
-    reqHtml += '<div class="req"><div><b>'+esc(q.name)+'</b> — '+r.name+'<br><span style="color:var(--dim);font-size:12.5px">'+q.date+' من '+fmtTime(q.start)+' ('+q.hours+' س)'+(q.phone?(' — '+esc(q.phone)):'')+(q.note?('<br>📝 '+esc(q.note)):'')+'</span></div>'+
-      '<div class="acts"><button class="btn small green" onclick="acceptReq(\''+q.id+'\')">قبول</button>'+
+    const dep = q.depositStatus==='awaiting_deposit' ? '<br><span class="deposit-status">في انتظار العربون · '+money(q.depositAmount)+' (50%) من '+money(q.totalAmount)+'</span>' : '';
+    reqHtml += '<div class="req"><div><b>'+esc(q.name)+'</b> — '+r.name+'<br><span style="color:var(--dim);font-size:12.5px">'+q.date+' من '+fmtTime(q.start)+' ('+q.hours+' س)'+(q.phone?(' — '+esc(q.phone)):'')+(q.note?('<br>📝 '+esc(q.note)):'')+'</span>'+dep+'</div>'+
+      '<div class="acts"><button class="btn small green" onclick="acceptReq(\''+q.id+'\')">'+(q.depositStatus==='awaiting_deposit'?'راجعت العربون · قبول':'قبول')+'</button>'+
       '<button class="btn small red" onclick="declineReq(\''+q.id+'\')">رفض</button></div></div>';
   }
   reqHtml += '</div>';
