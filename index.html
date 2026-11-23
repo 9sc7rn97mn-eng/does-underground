@@ -486,7 +486,7 @@ function openBooking(roomId){
     '<label>رقم الموبايل</label><input id="fPhone" inputmode="tel" placeholder="01xxxxxxxxx" maxlength="14">'+
     '<div id="returningCustomer" class="note" hidden>بياناتك محفوظة على الجهاز ده بس. <button type="button" class="btn small ghost" onclick="forgetCustomer()">مش انت؟ امسح البيانات</button></div>'+
     (bookingRoom.cat==='ps'?'<label>اللعبة اللي حابب تلعبها (اختياري)</label><input id="fGame" placeholder="اكتب اسم اللعبة" maxlength="80"><div class="note">FC 27 موجودة على البلايستيشن 5 في Galaxy Room. طلب اللعبة حسب التوفر.</div>':'')+
-    '<div class="deposit-box" id="refBox"><label>كود دعوة من صاحبك (اختياري)</label><input id="fInvite" maxlength="14" placeholder="DU..." autocapitalize="characters" oninput="if(this.value.trim()&&document.getElementById('fUseReward'))document.getElementById('fUseReward').checked=false;renderDeposit()"><div class="note">للعميل الجديد: خصم 10% بالكود مرة واحدة. صاحب الكود يكسب خصم 10% لحجزه الجاي بعد قبول حجزك. مفيش دعوة لنفسك أو جمع خصومات.</div><div id="myReferral"></div></div>'+
+    '<div class="deposit-box" id="refBox"><label>كود دعوة من صاحبك (اختياري)</label><input id="fInvite" maxlength="14" placeholder="DU..." autocapitalize="characters" oninput="inviteChanged(this)"><div class="note">للعميل الجديد: خصم 10% بالكود مرة واحدة. صاحب الكود يكسب خصم 10% لحجزه الجاي بعد قبول حجزك. مفيش دعوة لنفسك أو جمع خصومات.</div><div id="myReferral"></div></div>'+
     '<label>ملاحظات (اختياري)</label><input id="fNote" placeholder="ضيف ملاحظاتك او لو حابب نجهزلك حاجه معينه" maxlength="200">'+
     '<div class="row2"><div><label>اليوم</label><input id="fDate" type="date" value="'+td+'" min="'+td+'"></div>'+
     '<div><label>من الساعة</label><select id="fStart">'+
@@ -631,6 +631,7 @@ async function notifyWaiting(id){
 }
 
 
+function inviteChanged(el){const cb=document.getElementById('fUseReward');if(el.value.trim()&&cb)cb.checked=false;renderDeposit();}
 function myRefFor(phone){try{const x=JSON.parse(localStorage.getItem('dugReferral')||'null');return x&&x.phone===egyptWhatsAppNumber(phone)&&typeof x.key==='string'&&typeof x.code==='string'?x:null;}catch(e){return null;}}
 function saveRef(phone,code,key){try{localStorage.setItem('dugReferral',JSON.stringify({phone:egyptWhatsAppNumber(phone),code,key}));}catch(e){}}
 function refSuccess(phone){const x=myRefFor(phone);return x?'<div class="deposit-box"><b>كود دعوتك: <span dir="ltr">'+esc(x.code)+'</span></b><p class="note">ابعته لعميل جديد ياخد 10%، وبعد قبول حجزه تكسب 10% لحجزك الجاي. احتفظ بالجهاز ده عشان تستخدم مكافأتك. مشاركة الكود بس، مش بيانات المتصفح.</p><button class="btn ghost" onclick="copyMyInvite()">انسخ كود الدعوة</button></div>':'';}
