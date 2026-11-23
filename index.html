@@ -218,7 +218,6 @@ function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(
 function toMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
 function toHM(min){ min=((min%1440)+1440)%1440; return String(Math.floor(min/60)).padStart(2,'0')+':'+String(min%60).padStart(2,'0'); }
 function fmtTime(t){ const [hh,mm]=String(t||'').split(':').map(Number); if(!Number.isFinite(hh)||!Number.isFinite(mm)) return String(t||''); const h=hh%24; return (h%12||12)+':'+String(mm).padStart(2,'0')+(h<12?' ص':' م'); }
-function parseTime12(t){ const m=String(t||'').trim().match(/^(1[0-2]|[1-9]):([0-5]\d)\s*(ص|م|AM|PM)$/i); if(!m) return null; let h=Number(m[1])%12; if(/^م$|^pm$/i.test(m[3])) h+=12; return String(h).padStart(2,'0')+':'+m[2]; }
 function nowMin(){ const d=cairoNow(); return d.getHours()*60+d.getMinutes(); }
 
 /* ============ DERIVED STATUS ============ */
@@ -337,7 +336,9 @@ function openBooking(roomId){
     '<label>الاسم</label><input id="fName" placeholder="اسمك" maxlength="40">'+
     '<label>رقم الموبايل</label><input id="fPhone" inputmode="tel" placeholder="01xxxxxxxxx" maxlength="14">'+
     '<div class="row2"><div><label>اليوم</label><input id="fDate" type="date" value="'+td+'" min="'+td+'"></div>'+
-    '<div><label>من الساعة (مثال 6:00 م)</label><input id="fStart" type="text" inputmode="text" dir="ltr" placeholder="6:00 م" value="6:00 م"></div></div>'+
+    '<div><label>من الساعة</label><select id="fStart">'+
+      Array.from({length:24},(_,h)=>{ const v=String(h).padStart(2,'0')+':00'; return '<option value="'+v+'"'+(h===18?' selected':'')+'>'+fmtTime(v)+'</option>'; }).join('')+
+    '</select></div></div>'+
     '<label>عدد الساعات</label><select id="fHours">'+
       [1,2,3,4,5,6].map(h=>'<option value="'+h+'"'+(h===2?' selected':'')+'>'+h+(h===1?' ساعة':' ساعات')+'</option>').join('')+
     '</select>'+
@@ -365,9 +366,7 @@ function checkConflict(){
   const date=document.getElementById('fDate').value, start=document.getElementById('fStart').value;
   const hours=parseInt(document.getElementById('fHours').value);
   if(!date||!start) return true;
-  const start24=parseTime12(start);
-  if(!start24){ c.style.display='block'; c.textContent='اكتب الساعة بنظام 12 ساعة، مثال 6:00 م أو 6:00 ص'; return false; }
-  const s=toMin(start24), e=s+hours*60;
+  const s=toMin(start), e=s+hours*60;
   const hit = bookingsFor(bookingRoom.id, date).find(b=>{ const bs=toMin(b.start), be=bs+b.hours*60; return s<be && e>bs; });
   if(hit){ c.style.display='block'; c.textContent='الوقت ده محجوز ('+fmtTime(hit.start)+' لـ '+fmtTime(toHM(toMin(hit.start)+hit.hours*60))+') — اختار وقت تاني'; return false; }
   c.style.display='none'; return true;
@@ -376,11 +375,10 @@ async function submitBooking(){
   const name=document.getElementById('fName').value.trim();
   const phone=document.getElementById('fPhone').value.trim();
   const date=document.getElementById('fDate').value;
-  const startInput=document.getElementById('fStart').value;
-  const start=parseTime12(startInput);
+  const start=document.getElementById('fStart').value;
   const hours=parseInt(document.getElementById('fHours').value);
   if(!name){ alert('اكتب اسمك الأول'); return; }
-  if(!date||!start){ alert('اختار اليوم واكتب الساعة بنظام 12 ساعة، مثال 6:00 م أو 6:00 ص'); return; }
+  if(!date||!start){ alert('اختار اليوم والساعة'); return; }
   if(!checkConflict()) return;
   const req = {id:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
     room:bookingRoom.id, name, phone, date, start, hours, ts:Date.now()};
