@@ -142,6 +142,7 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
 .toast{position:fixed; bottom:70px; right:50%; transform:translateX(50%); background:#0e2a1d; border:1px solid #2ee6a855; color:var(--ok); padding:10px 22px; border-radius:999px; font-size:14px; z-index:99; display:none; box-shadow:0 6px 24px #00000088}
 .deposit-box{background:#171b2c;border:1px solid #6552aa;border-radius:12px;padding:14px;margin-top:14px;line-height:1.9;text-align:right}.deposit-status{display:inline-block;color:#f6d58a;font-size:13px;margin-top:6px}.success .deposit-box{text-align:center}
 .location-section{display:grid;grid-template-columns:1fr 1.2fr;gap:24px;align-items:center;margin:34px auto;padding:22px;background:#0d1120;border:1px solid #303654;border-radius:18px;max-width:900px}.location-section h2{margin-top:0}.location-copy p{color:#c4c9dc;line-height:1.9;margin:14px 0 20px}.location-section iframe{width:100%;height:310px;border:0;border-radius:12px;background:#171b2c}@media(max-width:650px){.location-section{grid-template-columns:1fr;margin:28px 12px;padding:18px}.location-section iframe{height:280px}}
+.social-links{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:24px auto 8px}.social-links a,.social-links button{display:inline-flex;align-items:center;gap:9px;padding:10px 15px;border:1px solid #343854;background:#111625;border-radius:12px;color:#e9eafa;text-decoration:none;font:inherit;cursor:pointer}.social-links a:hover,.social-links button:hover{border-color:#b85dfa;background:#1d1731}.social-icon{display:inline-grid;place-items:center;width:25px;height:25px;font-size:24px;line-height:1;font-weight:800}.social-icon.fb{color:#5fa0ff}.social-icon.tk{color:#fff;text-shadow:-2px 0 #25f4ee,2px 1px #fe2c55}.share-fallback{max-width:520px;margin:14px auto;text-align:right}.share-fallback textarea{width:100%;min-height:100px;direction:rtl}.share-fallback[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -182,7 +183,12 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
     <br>
     <a class="wa" href="https://wa.me/201063436643" target="_blank" rel="noopener">واتساب: ‎0106 343 6643‎</a>
     <div style="margin-top:14px; font-size:12px; opacity:.75">الحجز من الموقع بيوصل للمكان فوراً وبيتأكد منهم</div>
-  </footer>
+  <div class="social-links" aria-label="تابع DOES Underground">
+<a href="https://www.facebook.com/profile.php?id=61585240370723" target="_blank" rel="noopener" aria-label="DOES Underground على Facebook"><span class="social-icon fb" aria-hidden="true">f</span><span>Facebook</span></a>
+<a href="https://www.tiktok.com/@does_underground" target="_blank" rel="noopener" aria-label="DOES Underground على TikTok"><span class="social-icon tk" aria-hidden="true">♪</span><span>TikTok</span></a>
+<button type="button" onclick="shareSite()"><span aria-hidden="true">↗</span> شارك الموقع</button>
+</div><div id="siteShareFallback" class="share-fallback" hidden><label>انسخ لينك الموقع</label><textarea readonly aria-label="لينك الموقع للمشاركة"></textarea></div>
+</footer>
 </div>
 
 <div class="overlay" id="overlay">
@@ -216,6 +222,24 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
 const ADMIN_HASH = '#dug7-admin-x9k2';
 const WA_NUMBER = '201063436643';
 const DEPOSIT_NUMBER = '01012423094';
+const BOOKING_SITE_URL = 'https://does-underground.surge.sh/';
+let friendBookingText = '';
+async function shareText(text,booking){
+  if(navigator.share){
+    try{ await navigator.share({title:'DOES Underground',text,url:BOOKING_SITE_URL}); return; }
+    catch(e){ if(e.name==='AbortError')return; }
+  }
+  const value=text+'\n'+BOOKING_SITE_URL;
+  try{ await navigator.clipboard.writeText(value); toast(booking?'تفاصيل الطلب واللينك اتنسخوا، ابعتهم لصحابك':'لينك الموقع اتنسخ'); }
+  catch(e){
+    const wrap=document.getElementById(booking?'bookingShareFallback':'siteShareFallback');
+    wrap.hidden=false; wrap.querySelector('textarea').value=value; wrap.querySelector('textarea').focus(); wrap.querySelector('textarea').select();
+    toast('حدد النص وانسخه عشان تشاركه');
+  }
+}
+function shareSite(){ return shareText('احجز وقتك في DOES Underground',false); }
+function shareBooking(){ return shareText(friendBookingText,true); }
+
 function money(n){ return Number(n).toLocaleString('en-US',{maximumFractionDigits:2})+' جنيه'; }
 function bookingAmounts(rate,hours){ const total=Math.round(Number(rate)*Number(hours)*100)/100; return {total,deposit:Math.round(total*50)/100}; }
 function renderDeposit(){
@@ -497,12 +521,15 @@ async function submitBooking(){
     document.getElementById('modal').innerHTML='<div class="success"><h4>طلبك اتبعت، ومستني مراجعة المكان</h4><p>تعذر عرض مبلغ العربون. متحولش فلوس قبل ما تتأكد من المكان.</p><button class="btn ghost" onclick="closeModal()">تمام</button></div>'; return;
   }
   const waText = encodeURIComponent('طلب حجز DOES Underground\nرقم الطلب: '+res.id+'\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours+(game?'\nاللعبة المطلوبة: '+game:'')+'\nإجمالي الحجز: '+money(total)+'\nالعربون المطلوب (50%): '+money(deposit)+'\nهرفق صورة تحويل العربون للمراجعة'+(note?('\nملاحظات: '+note):''));
+  friendBookingText='طلب حجز في DOES Underground (لسه مستني تأكيد المكان)\n'+bookingRoom.name+'\n'+date+' من '+fmtTime(start)+' لمدة '+hours+' ساعة'+(game?'\nاللعبة المطلوبة: '+game:'');
   document.getElementById('modal').innerHTML =
     '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت، في انتظار العربون</h4>'+
     '<p>'+bookingRoom.name+' · '+date+' من '+fmtTime(start)+' ('+hours+' س)</p>'+
     '<div class="deposit-box"><b>إجمالي الحجز: '+money(total)+'</b><br>العربون (50%): <b>'+money(deposit)+'</b><br>حوّل العربون بفودافون كاش على<br><b dir="ltr" style="font-size:22px">'+DEPOSIT_NUMBER+'</b></div>'+
     '<p>بعد التحويل، ابعت صورة العملية على واتساب المكان. الحجز مش مؤكد لحد ما المكان يراجع التحويل ويأكد المعاد. فتح واتساب لوحده مش تأكيد للدفع.</p>'+
     '<a class="btn green" style="text-decoration:none" href="https://wa.me/'+WA_NUMBER+'?text='+waText+'" target="_blank" rel="noopener">ابعت صورة التحويل على واتساب</a>'+
+    '<button class="btn ghost" style="margin-top:10px" onclick="shareBooking()">شارك تفاصيل الطلب مع صحابك</button>'+
+    '<div id="bookingShareFallback" class="share-fallback" hidden><label>انسخ تفاصيل الطلب</label><textarea readonly aria-label="تفاصيل الطلب للمشاركة"></textarea></div>'+
     '<button class="btn ghost" style="margin-top:10px" onclick="closeModal()">تمام</button></div>';
 }
 document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
