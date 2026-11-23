@@ -625,7 +625,7 @@ function renderAdmin(){
   for(const b of tb){
     const r = roomById(b.room);
     bkHtml += '<div class="bk"><span><b>'+fmtTime(b.start)+'</b> — '+r.name+' — '+esc(b.name)+(b.phone?(' ('+esc(b.phone)+')'):'')+' — '+b.hours+' س'+(b.note?(' — 📝 '+esc(b.note)):'')+'</span>'+
-      '<button class="del" onclick="delBooking(\''+b.id+'\')">✕</button></div>';
+      '<div class="acts"><button class="btn small ghost" onclick="previewBookedConfirmation(\''+b.id+'\')">ابعت تأكيد واتساب</button><button class="del" onclick="delBooking(\''+b.id+'\')">✕</button></div></div>';
   }
   bkHtml += '<div style="margin-top:12px"><button class="btn small ghost" onclick="clearOldBookings()">مسح الحجوزات القديمة (قبل النهارده)</button></div>';
   bkHtml += '</div>';
@@ -676,7 +676,7 @@ async function acceptReq(id){
   const q = requests[id]; if(!q) return;
   const hit = conflictHit(q.room, q.date, q.start, q.hours);
   if(hit){ toast('مينفعش — '+conflictMsg(roomById(q.room).name, hit)); return; }
-  try{ await adminOp('accept',{id}); toast('اتأكد الحجز ✔'); }
+  try{ await adminOp('accept',{id}); toast('اتأكد الحجز ✔'); renderAll(); showConfirmationPreview(q); return; }
   catch(e){ if(e.res&&e.res.error==='conflict') toast('مينفعش — الروم محجوزة في الوقت ده'); else toast('مشكلة اتصال — جرب تاني'); }
   renderAll();
 }
@@ -740,11 +740,11 @@ setInterval(syncNow, 45000);
 function closeWelcome(){ document.getElementById('welcome').classList.remove('open'); }
 document.getElementById('welcome').addEventListener('click', e=>{ if(e.target.id==='welcome') closeWelcome(); });
 (function showWelcome(){
-  if(sessionStorage.getItem('dugWelcomed')==='1') return;
+  if(isAdmin||location.hash==='#dug7-admin-x9k2'||sessionStorage.getItem('dugWelcomed')==='1') return;
   sessionStorage.setItem('dugWelcomed','1');
   const logo=document.querySelector('header .logo');
   if(logo && logo.src) document.getElementById('welcomeLogo').src=logo.src;
-  setTimeout(()=>{ const w=document.getElementById('welcome'); if(w) w.classList.add('open'); }, 400);
+  setTimeout(()=>{ const w=document.getElementById('welcome'); if(w&&!isAdmin&&location.hash!=='#dug7-admin-x9k2') w.classList.add('open'); }, 400);
 })();
 
 setInterval(renderAll, 30000); // keep "busy until" fresh
@@ -790,6 +790,18 @@ function celebrateBookingRequest(){
  document.querySelector('.booking-confetti')?.remove();const canvas=document.createElement('canvas');canvas.className='booking-confetti';canvas.setAttribute('aria-hidden','true');document.body.appendChild(canvas);const ctx=canvas.getContext('2d');if(!ctx){canvas.remove();return;}
  const w=innerWidth,h=innerHeight,dpr=Math.min(devicePixelRatio||1,2);canvas.width=w*dpr;canvas.height=h*dpr;ctx.scale(dpr,dpr);const colors=['#ff4cce','#4fa2ff','#7dffda','#b885ff','#ffe287'],parts=Array.from({length:w<650?38:65},()=>({x:w/2,y:h*.3,vx:(Math.random()-.5)*9,vy:-2-Math.random()*7,size:3+Math.random()*4,angle:Math.random()*6,spin:(Math.random()-.5)*.2,color:colors[Math.floor(Math.random()*colors.length)]}));let start,previous;
  function draw(now){if(!canvas.isConnected)return;if(!start)start=previous=now;const age=now-start,dt=Math.min((now-previous)/16.67,2);previous=now;ctx.clearRect(0,0,w,h);ctx.globalAlpha=Math.max(0,Math.min(1,(2400-age)/700));for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.1*dt;p.angle+=p.spin*dt;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.fillStyle=p.color;ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*.6);ctx.restore();}if(age<2400)requestAnimationFrame(draw);else canvas.remove();}requestAnimationFrame(draw);
+}
+
+
+function egyptWhatsAppNumber(raw){let n=String(raw||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[ +()-]/g,'');if(n.startsWith('0020'))n=n.slice(2);if(/^01[0125]\d{8}$/.test(n))n='2'+n;return /^201[0125]\d{8}$/.test(n)?n:null;}
+function previewBookedConfirmation(id){const b=bookings.find(b=>b.id===id);if(!adminOk||!b)return;showConfirmationPreview(b);}
+function showConfirmationPreview(b){
+ if(!adminOk)return;const number=egyptWhatsAppNumber(b.phone),room=roomById(b.room).name;
+ const message='حجزك اتأكد في DOES Underground 🎮\nالروم: '+room+'\nاليوم: '+b.date+'\nمن: '+fmtTime(b.start)+'\nالمدة: '+b.hours+' ساعة\nالعنوان: دمنهور، أول الكوبري العلوي، أمام مديرية الصحة، مكان XO القديم';
+ const modal=document.getElementById('modal');modal.innerHTML='<h3>ابعت تأكيد واتساب</h3><p class="sub">راجع الرقم والرسالة قبل ما تفتح واتساب. الإرسال بإيدك، مش تلقائي.</p><label>رقم العميل</label><p dir="ltr" style="text-align:right">'+esc(b.phone||'مش متسجل')+'</p><label>نص التأكيد</label><textarea id="confirmMessagePreview" readonly style="height:190px"></textarea>'+(number?'<a id="customerConfirmLink" class="btn green" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:14px">افتح واتساب للعميل</a>':'<p class="note" role="status">رقم العميل مش رقم موبايل مصري كامل. مفيش لينك واتساب عشان منبعتش لشخص غلط.</p>')+'<button class="btn ghost" style="margin-top:12px" onclick="closeModal()">إغلاق</button>';
+ document.getElementById('confirmMessagePreview').value=message;
+ if(number){const link=new URL('https://wa.me/'+number);link.searchParams.set('text',message);document.getElementById('customerConfirmLink').href=link.href;}
+ document.getElementById('overlay').classList.add('open');
 }
 
 </script>
