@@ -480,6 +480,7 @@ function openBooking(roomId){
     '<div class="sub">'+bookingRoom.type+(bookingRoom.vip?' • VIP':'')+' — '+bookingRoom.price+' جنيه/الساعة</div>'+
     '<label>الاسم</label><input id="fName" placeholder="اسمك" maxlength="40">'+
     '<label>رقم الموبايل</label><input id="fPhone" inputmode="tel" placeholder="01xxxxxxxxx" maxlength="14">'+
+    '<div id="returningCustomer" class="note" hidden>بياناتك محفوظة على الجهاز ده بس. <button type="button" class="btn small ghost" onclick="forgetCustomer()">مش انت؟ امسح البيانات</button></div>'+
     (bookingRoom.cat==='ps'?'<label>اللعبة اللي حابب تلعبها (اختياري)</label><input id="fGame" placeholder="اكتب اسم اللعبة" maxlength="80"><div class="note">FC 27 موجودة على البلايستيشن 5 في Galaxy Room. طلب اللعبة حسب التوفر.</div>':'')+
     '<label>ملاحظات (اختياري)</label><input id="fNote" placeholder="ضيف ملاحظاتك او لو حابب نجهزلك حاجه معينه" maxlength="200">'+
     '<div class="row2"><div><label>اليوم</label><input id="fDate" type="date" value="'+td+'" min="'+td+'"></div>'+
@@ -495,6 +496,7 @@ function openBooking(roomId){
     '<div style="margin-top:18px"><button class="btn" onclick="submitBooking()">ابعت طلب الحجز</button></div>'+
     '<button class="btn ghost" style="margin-top:10px" onclick="closeModal()">إلغاء</button>'+
     '<div class="note">الحجز بيتأكد من المكان بعد مراجعة العربون وتوفر المعاد.</div>';
+  prefillCustomer();
   ['fDate','fStart','fHours'].forEach(id=>document.getElementById(id).addEventListener('change', checkConflict));
   document.getElementById('fDate').addEventListener('change', renderBookedInModal);
   document.getElementById('fHours').addEventListener('change',renderDeposit);
@@ -564,6 +566,7 @@ async function submitBooking(){
     }
     serverBusy(); return;
   }
+  rememberCustomer(name,phone);
   const total=Number(res.totalAmount), deposit=Number(res.depositAmount);
   if(!Number.isFinite(total)||!Number.isFinite(deposit)||res.depositNumber!==DEPOSIT_NUMBER){
     document.getElementById('modal').innerHTML='<div class="success"><h4>طلبك اتبعت، ومستني مراجعة المكان</h4><p>تعذر عرض مبلغ العربون. متحولش فلوس قبل ما تتأكد من المكان.</p><button class="btn ghost" onclick="closeModal()">تمام</button></div>'; return;
@@ -803,6 +806,11 @@ function showConfirmationPreview(b){
  if(number){const link=new URL('https://wa.me/'+number);link.searchParams.set('text',message);document.getElementById('customerConfirmLink').href=link.href;}
  document.getElementById('overlay').classList.add('open');
 }
+
+
+function rememberCustomer(name,phone){try{localStorage.setItem('dugCustomer',JSON.stringify({name:String(name).slice(0,40),phone:String(phone).slice(0,14)}));}catch(e){}}
+function prefillCustomer(){try{const d=JSON.parse(localStorage.getItem('dugCustomer')||'null');if(!d||typeof d.name!=='string'||typeof d.phone!=='string')return;document.getElementById('fName').value=d.name.slice(0,40);document.getElementById('fPhone').value=d.phone.slice(0,14);document.getElementById('returningCustomer').hidden=false;}catch(e){}}
+function forgetCustomer(){try{localStorage.removeItem('dugCustomer');}catch(e){}const n=document.getElementById('fName'),p=document.getElementById('fPhone');if(n)n.value='';if(p)p.value='';const row=document.getElementById('returningCustomer');if(row)row.hidden=true;toast('اتمسحت البيانات المحفوظة على الجهاز ده');}
 
 </script>
 </body>
