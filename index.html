@@ -88,6 +88,8 @@ h2 .bar{width:26px; height:3px; border-radius:3px; background:linear-gradient(90
 label{display:block; font-size:13px; color:var(--dim); margin:14px 0 6px}
 input,select{width:100%; background:#070b18; border:1px solid var(--line); color:var(--txt); border-radius:12px; padding:12px 14px; font-size:15px; font-family:inherit; outline:none}
 input:focus,select:focus{border-color:var(--blue); box-shadow:0 0 0 3px #3e8bff22}
+textarea{width:100%; background:#070b18; border:1px solid var(--line); color:var(--txt); border-radius:12px; padding:12px 14px; font-size:15px; font-family:inherit; outline:none; resize:vertical; min-height:84px}
+textarea:focus{border-color:var(--blue); box-shadow:0 0 0 3px #3e8bff22}
 select option{background:#0b1020}
 .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
 .conflict{color:var(--busy); font-size:13px; margin-top:10px; display:none}
@@ -139,6 +141,17 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
   <div id="adSlot" class="ad-slot" style="display:none"></div>
 
   <div id="sections"></div>
+
+  <h2><span class="bar"></span>رأيك يهمنا</h2>
+  <div class="card feedback">
+    <div style="font-size:15px; margin-bottom:4px">ملاحظاتك عن المكان وتحب نطور ايه؟</div>
+    <label for="fbText">رأيك</label>
+    <textarea id="fbText" maxlength="500" placeholder="اكتب ملاحظتك هنا…"></textarea>
+    <label for="fbName" style="margin-top:10px">اسمك (اختياري)</label>
+    <input id="fbName" maxlength="40" placeholder="اسمك">
+    <div style="margin-top:14px"><button class="btn green" onclick="sendFeedback()">ابعت رأيك</button></div>
+    <div class="note">رأيك بيوصل لصاحب المكان بس على واتساب، محدش تاني بيشوفه.</div>
+  </div>
 
   <footer>
     للحجز السريع أو أي استفسار
@@ -336,6 +349,17 @@ function openBooking(roomId){
   document.getElementById('overlay').classList.add('open');
 }
 function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+/* ============ FEEDBACK ============ */
+function sendFeedback(){
+  const t=document.getElementById('fbText').value.trim();
+  if(!t){ toast('اكتب ملاحظتك الأول'); return; }
+  const n=document.getElementById('fbName').value.trim();
+  const msg='ملاحظة عن DOES Underground'+(n?('\nمن: '+n):'')+'\n'+t;
+  window.open('https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent(msg),'_blank','noopener');
+  document.getElementById('fbText').value='';
+  document.getElementById('fbName').value='';
+  toast('كمل الإرسال على واتساب 👍');
+}
 function checkConflict(){
   const c = document.getElementById('fConflict'); if(!c) return true;
   const date=document.getElementById('fDate').value, start=document.getElementById('fStart').value;
