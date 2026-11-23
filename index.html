@@ -158,7 +158,7 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
 @media(max-width:650px){.arcade-scene:before{animation:none;opacity:.5}.neon-speck:nth-child(n+7){display:none}.float-book{left:14px;bottom:calc(14px + env(safe-area-inset-bottom));font-size:13px;padding:12px 18px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}.arcade-scene:before{opacity:.35}}
 
-.sound-toggle{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;display:block;margin:0;padding:9px 14px;border:1px solid #343854;border-radius:12px;background:#111625;color:#b9c5e9;font:inherit;cursor:pointer;font-size:12px}.sound-toggle:focus-visible{outline:2px solid #34e0ff}
+.sound-toggle{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;display:block;margin:0;padding:9px 14px;border:1px solid #343854;border-radius:12px;background:#111625;color:#b9c5e9;font:inherit;cursor:pointer;font-size:12px}.sound-toggle[hidden]{display:none}.sound-toggle:focus-visible{outline:2px solid #34e0ff}
 </style>
 </head>
 <body><div class="arcade-scene" aria-hidden="true"><i class="neon-speck" style="--x:7%;--y:13%;--d:0.15;--delay:-0s"></i><i class="neon-speck" style="--x:36%;--y:30%;--d:0.19;--delay:-1s"></i><i class="neon-speck" style="--x:65%;--y:47%;--d:0.23;--delay:-2s"></i><i class="neon-speck" style="--x:94%;--y:64%;--d:0.27;--delay:-3s"></i><i class="neon-speck" style="--x:23%;--y:81%;--d:0.31;--delay:-4s"></i><i class="neon-speck" style="--x:52%;--y:98%;--d:0.35;--delay:-5s"></i><i class="neon-speck" style="--x:81%;--y:15%;--d:0.39;--delay:-6s"></i><i class="neon-speck" style="--x:10%;--y:32%;--d:0.43;--delay:-7s"></i><i class="neon-speck" style="--x:39%;--y:49%;--d:0.47;--delay:-8s"></i><i class="neon-speck" style="--x:68%;--y:66%;--d:0.51;--delay:-9s"></i></div>
@@ -725,7 +725,7 @@ function jumpToBooking(){document.getElementById('sections').scrollIntoView({beh
 (function initDecor(){
  const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
  const f=document.getElementById('floatBook');
- function update(){const blocked=isAdmin||document.querySelector('#overlay.open,#welcome.open,#loginWall');f.hidden=!!blocked||scrollY<350;}
+ function update(){const blocked=isAdmin||document.querySelector('#overlay.open,#welcome.open,#loginWall');f.hidden=!!blocked||scrollY<350;const st=document.getElementById('soundToggle');if(st)st.hidden=!!blocked;}
  addEventListener('scroll',update,{passive:true});new MutationObserver(update).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','style']});update();
  if(!reduced&&matchMedia('(pointer:fine)').matches){let queued=false,x=0,y=0;addEventListener('pointermove',e=>{x=(e.clientX/innerWidth-.5)*28;y=(e.clientY/innerHeight-.5)*28;if(!queued){queued=true;requestAnimationFrame(()=>{const b=document.querySelector('.arcade-scene');b.style.setProperty('--mx',x+'px');b.style.setProperty('--my',y+'px');queued=false;});}},{passive:true});}
 
