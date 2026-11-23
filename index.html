@@ -497,7 +497,7 @@ function openBooking(roomId){
     '</select>'+
     '<div class="today-bookings" id="fBooked"></div>'+
     '<div class="deposit-box" id="fDeposit" aria-live="polite"></div>'+
-    '<div class="deposit-box" id="fPoints"><b>كل حجز مقبول = 50 نقطة</b><div class="note">النقاط بتتضاف بعد ما المكان يقبل الحجز، مش بمجرد إرسال الطلب. اكتب رقم موبايل مصري صحيح عشان تتحسبلك.</div></div>'+
+    '<div class="deposit-box" id="fPoints"><b>كل حجز مقبول = 50 نقطة</b><div class="note">النقاط بتتضاف بعد ما المكان يقبل الحجز، مش بمجرد إرسال الطلب. اكتب رقم موبايل مصري صحيح عشان تتحسبلك.</div><p><b>400 نقطة = ساعة ببلاش في أي لعبة في المكان من اختيارك.</b></p><div class="note">الاستبدال بالتنسيق مع إدارة المكان بعد مراجعة الرصيد وتوفر المعاد. مفيش استبدال تلقائي على الموقع حالياً.</div></div>'+
     '<div class="conflict" id="fConflict"></div>'+
     '<div id="fWait" hidden class="deposit-box"><b>المعاد ده محجوز</b><p>سجل اسمك ورقمك، ولو المعاد فضي المكان يقدر يكلمك على واتساب. دي قائمة انتظار، مش حجز أو ضمان للتوفر. متحولش عربون.</p><button id="waitJoinBtn" class="btn ghost" onclick="joinWaitlist()">سجل في قائمة الانتظار</button></div>'+
     '<div style="margin-top:18px"><button id="fSubmit" class="btn" onclick="submitBooking()">ابعت طلب الحجز</button></div>'+
@@ -584,7 +584,7 @@ async function submitBooking(){
   const waText = encodeURIComponent('طلب حجز DOES Underground\nرقم الطلب: '+res.id+'\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours+(game?'\nاللعبة المطلوبة: '+game:'')+'\nإجمالي الحجز: '+money(total)+'\nالعربون المطلوب (50%): '+money(deposit)+'\nهرفق صورة تحويل العربون للمراجعة'+(note?('\nملاحظات: '+note):''));
   friendBookingText='طلب حجز في DOES Underground (لسه مستني تأكيد المكان)\n'+bookingRoom.name+'\n'+date+' من '+fmtTime(start)+' لمدة '+hours+' ساعة'+(game?'\nاللعبة المطلوبة: '+game:'');
   document.getElementById('modal').innerHTML =
-    '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت، في انتظار العربون</h4><p>+50 نقطة بعد قبول الحجز برقم موبايل مصري صحيح</p>'+
+    '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت، في انتظار العربون</h4><p>+50 نقطة بعد قبول الحجز برقم موبايل مصري صحيح</p><p>400 نقطة = ساعة ببلاش في أي لعبة في المكان من اختيارك. الاستبدال مع إدارة المكان بعد مراجعة الرصيد والتوفر، مش تلقائي على الموقع.</p>'+
     '<p>'+bookingRoom.name+' · '+date+' من '+fmtTime(start)+' ('+hours+' س)</p>'+
     (res.discountPercent?'<p>خصم 10% اتطبق · قبل الخصم '+money(res.originalAmount)+'</p>':'')+refSuccess(phone)+
     '<div class="deposit-box"><b>إجمالي الحجز: '+money(total)+'</b><br>العربون (50%): <b>'+money(deposit)+'</b><br>حوّل العربون بفودافون كاش على<br><b dir="ltr" style="font-size:22px">'+DEPOSIT_NUMBER+'</b></div>'+
