@@ -356,6 +356,7 @@ function renderSections(){
       html += '<div class="card">';
       html += '<span class="type">'+r.type+(r.vip?' • VIP':'')+'</span>';
       html += '<h3>'+r.name+'</h3>';
+      if(r.id==='galaxy') html += '<div class="note" style="color:#39e7ba;margin:0 0 10px">🎮 FC 27 متاحة هنا</div>';
       html += '<div class="price"><b>'+r.price+' جنيه</b> / الساعة</div>';
       html += '<div class="pill '+(info.busy?'busy':'free')+'"><i></i>'+info.label+'</div>';
       if(nb) html += '<div class="today-bookings">أقرب حجز جاي: <span>'+fmtTime(nb.start)+' ('+nb.hours+' ساعة)</span></div>';
@@ -400,6 +401,7 @@ function openBooking(roomId){
     '<div class="sub">'+bookingRoom.type+(bookingRoom.vip?' • VIP':'')+' — '+bookingRoom.price+' جنيه/الساعة</div>'+
     '<label>الاسم</label><input id="fName" placeholder="اسمك" maxlength="40">'+
     '<label>رقم الموبايل</label><input id="fPhone" inputmode="tel" placeholder="01xxxxxxxxx" maxlength="14">'+
+    (bookingRoom.cat==='ps'?'<label>اللعبة اللي حابب تلعبها (اختياري)</label><input id="fGame" placeholder="اكتب اسم اللعبة" maxlength="80"><div class="note">FC 27 موجودة على البلايستيشن 5 في Galaxy Room. طلب اللعبة حسب التوفر.</div>':'')+
     '<label>ملاحظات (اختياري)</label><input id="fNote" placeholder="ضيف ملاحظاتك او لو حابب نجهزلك حاجه معينه" maxlength="200">'+
     '<div class="row2"><div><label>اليوم</label><input id="fDate" type="date" value="'+td+'" min="'+td+'"></div>'+
     '<div><label>من الساعة</label><select id="fStart">'+
@@ -456,6 +458,7 @@ async function submitBooking(){
   const name=document.getElementById('fName').value.trim();
   const phone=document.getElementById('fPhone').value.trim();
   const note=document.getElementById('fNote').value.trim();
+  const game=(document.getElementById('fGame')?.value||'').trim();
   const date=document.getElementById('fDate').value;
   const start=document.getElementById('fStart').value;
   const hours=parseInt(document.getElementById('fHours').value);
@@ -470,7 +473,7 @@ async function submitBooking(){
   }
   if(!online){ serverBusy(); return; }
   let res;
-  try{ res = await rpc('dug_submit_request',{p:{room:bookingRoom.id,name,phone,note,date,start,hours}}); }
+  try{ res = await rpc('dug_submit_request',{p:{room:bookingRoom.id,name,phone,note,game,date,start,hours}}); }
   catch(e){ serverBusy(); return; }
   if(!res || !res.ok){
     if(res && res.error==='conflict'){
@@ -486,7 +489,7 @@ async function submitBooking(){
   if(!Number.isFinite(total)||!Number.isFinite(deposit)||res.depositNumber!==DEPOSIT_NUMBER){
     document.getElementById('modal').innerHTML='<div class="success"><h4>طلبك اتبعت، ومستني مراجعة المكان</h4><p>تعذر عرض مبلغ العربون. متحولش فلوس قبل ما تتأكد من المكان.</p><button class="btn ghost" onclick="closeModal()">تمام</button></div>'; return;
   }
-  const waText = encodeURIComponent('طلب حجز DOES Underground\nرقم الطلب: '+res.id+'\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours+'\nإجمالي الحجز: '+money(total)+'\nالعربون المطلوب (50%): '+money(deposit)+'\nهرفق صورة تحويل العربون للمراجعة'+(note?('\nملاحظات: '+note):''));
+  const waText = encodeURIComponent('طلب حجز DOES Underground\nرقم الطلب: '+res.id+'\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours+(game?'\nاللعبة المطلوبة: '+game:'')+'\nإجمالي الحجز: '+money(total)+'\nالعربون المطلوب (50%): '+money(deposit)+'\nهرفق صورة تحويل العربون للمراجعة'+(note?('\nملاحظات: '+note):''));
   document.getElementById('modal').innerHTML =
     '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت، في انتظار العربون</h4>'+
     '<p>'+bookingRoom.name+' · '+date+' من '+fmtTime(start)+' ('+hours+' س)</p>'+
@@ -516,7 +519,7 @@ function renderAdmin(){
   for(const q of reqs){
     const r = roomById(q.room);
     const dep = q.depositStatus==='awaiting_deposit' ? '<br><span class="deposit-status">في انتظار العربون · '+money(q.depositAmount)+' (50%) من '+money(q.totalAmount)+'</span>' : '';
-    reqHtml += '<div class="req"><div><b>'+esc(q.name)+'</b> — '+r.name+'<br><span style="color:var(--dim);font-size:12.5px">'+q.date+' من '+fmtTime(q.start)+' ('+q.hours+' س)'+(q.phone?(' — '+esc(q.phone)):'')+(q.note?('<br>📝 '+esc(q.note)):'')+'</span>'+dep+'</div>'+
+    reqHtml += '<div class="req"><div><b>'+esc(q.name)+'</b> — '+r.name+'<br><span style="color:var(--dim);font-size:12.5px">'+q.date+' من '+fmtTime(q.start)+' ('+q.hours+' س)'+(q.phone?(' — '+esc(q.phone)):'')+(q.game?('<br>🎮 '+esc(q.game)):'')+(q.note?('<br>📝 '+esc(q.note)):'')+'</span>'+dep+'</div>'+
       '<div class="acts"><button class="btn small green" onclick="acceptReq(\''+q.id+'\')">'+(q.depositStatus==='awaiting_deposit'?'راجعت العربون · قبول':'قبول')+'</button>'+
       '<button class="btn small red" onclick="declineReq(\''+q.id+'\')">رفض</button></div></div>';
   }
