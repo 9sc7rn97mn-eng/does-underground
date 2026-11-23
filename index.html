@@ -266,6 +266,7 @@ button:focus-visible,.btn:focus-visible{outline:2px solid #58e6ff;outline-offset
 
 <!-- AdSense-ready: once a custom domain is live and approved, paste the AdSense snippet here and in <head>. -->
 <script>
+let adminPointBalances=null;
 /* ============ CONFIG ============ */
 const ADMIN_HASH = '#dug7-admin-x9k2';
 const WA_NUMBER = '201063436643';
@@ -377,6 +378,7 @@ async function loadState(){
     try{
       if(adminOk){
         const j = await rpc('dug_admin_state',{t:adminTok()});
+        if(j&&j.ok){try{const lp=await rpc('dug_admin_points',{t:adminTok()});if(lp.ok)adminPointBalances=lp.balances||{};}catch(e){adminPointBalances=null;}}
         if(j && j.ok) return j.data||{};
         if(j && j.error==='auth'){ adminDrop(); return {}; }
         throw new Error('admin state');
@@ -574,7 +576,7 @@ async function submitBooking(){
   const waText = encodeURIComponent('طلب حجز DOES Underground\nرقم الطلب: '+res.id+'\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours+(game?'\nاللعبة المطلوبة: '+game:'')+'\nإجمالي الحجز: '+money(total)+'\nالعربون المطلوب (50%): '+money(deposit)+'\nهرفق صورة تحويل العربون للمراجعة'+(note?('\nملاحظات: '+note):''));
   friendBookingText='طلب حجز في DOES Underground (لسه مستني تأكيد المكان)\n'+bookingRoom.name+'\n'+date+' من '+fmtTime(start)+' لمدة '+hours+' ساعة'+(game?'\nاللعبة المطلوبة: '+game:'');
   document.getElementById('modal').innerHTML =
-    '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت، في انتظار العربون</h4>'+
+    '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت، في انتظار العربون</h4><p>+50 نقطة بعد قبول الحجز برقم موبايل مصري صحيح</p>'+
     '<p>'+bookingRoom.name+' · '+date+' من '+fmtTime(start)+' ('+hours+' س)</p>'+
     '<div class="deposit-box"><b>إجمالي الحجز: '+money(total)+'</b><br>العربون (50%): <b>'+money(deposit)+'</b><br>حوّل العربون بفودافون كاش على<br><b dir="ltr" style="font-size:22px">'+DEPOSIT_NUMBER+'</b></div>'+
     '<p>بعد التحويل، ابعت صورة العملية على واتساب المكان. الحجز مش مؤكد لحد ما المكان يراجع التحويل ويأكد المعاد. فتح واتساب لوحده مش تأكيد للدفع.</p>'+
@@ -604,8 +606,10 @@ function renderAdmin(){
   if(!reqs.length) reqHtml += '<div class="note">مفيش طلبات مستنية.</div>';
   for(const q of reqs){
     const r = roomById(q.room);
+    const pointPhone=egyptWhatsAppNumber(q.phone),pointValue=adminPointBalances&&pointPhone?Number(adminPointBalances[pointPhone]||0):null;
+    const pointLine='<br><span class="deposit-status">'+(!pointPhone?'النقاط: رقم موبايل مصري كامل مطلوب':pointValue===null?'تعذر تحميل رصيد النقاط':'رصيد العميل: '+pointValue+' نقطة · +50 بعد القبول')+'</span>';
     const dep = q.depositStatus==='awaiting_deposit' ? '<br><span class="deposit-status">في انتظار العربون · '+money(q.depositAmount)+' (50%) من '+money(q.totalAmount)+'</span>' : '';
-    reqHtml += '<div class="req"><div><b>'+esc(q.name)+'</b> — '+r.name+'<br><span style="color:var(--dim);font-size:12.5px">'+q.date+' من '+fmtTime(q.start)+' ('+q.hours+' س)'+(q.phone?(' — '+esc(q.phone)):'')+(q.game?('<br>🎮 '+esc(q.game)):'')+(q.note?('<br>📝 '+esc(q.note)):'')+'</span>'+dep+'</div>'+
+    reqHtml += '<div class="req"><div><b>'+esc(q.name)+'</b> — '+r.name+'<br><span style="color:var(--dim);font-size:12.5px">'+q.date+' من '+fmtTime(q.start)+' ('+q.hours+' س)'+(q.phone?(' — '+esc(q.phone)):'')+(q.game?('<br>🎮 '+esc(q.game)):'')+(q.note?('<br>📝 '+esc(q.note)):'')+'</span>'+dep+pointLine+'</div>'+
       '<div class="acts"><button class="btn small green" onclick="acceptReq(\''+q.id+'\')">'+(q.depositStatus==='awaiting_deposit'?'راجعت العربون · قبول':'قبول')+'</button>'+
       '<button class="btn small red" onclick="declineReq(\''+q.id+'\')">رفض</button></div></div>';
   }
