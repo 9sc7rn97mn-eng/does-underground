@@ -244,6 +244,9 @@ function nowMin(){ const d=cairoNow(); return d.getHours()*60+d.getMinutes(); }
 function RC(r){ const c=roomCfgMap[r.id]||{}; return Object.assign({}, r, {name: c.name||r.name, price: (c.price!=null? c.price : r.price)}); }
 function roomById(id){ const r=ROOMS.find(x=>x.id===id); return r? RC(r) : {id, name:id, price:''}; }
 function bookingsFor(roomId, date){ return bookings.filter(b=>b.room===roomId && b.date===date).sort((a,b)=>toMin(a.start)-toMin(b.start)); }
+function slotOverlap(start, hours, b){ const s=toMin(start), e=s+hours*60; const bs=toMin(b.start), be=bs+b.hours*60; return s<be && e>bs; }
+function conflictHit(roomId, date, start, hours, list){ return (list||bookings).filter(b=>b.room===roomId && b.date===date).find(b=>slotOverlap(start, hours, b)); }
+function conflictMsg(roomName, hit){ return (roomName? roomName+' م' : 'م')+'حجوز في الوقت ده ('+fmtTime(hit.start)+' لـ '+fmtTime(toHM(toMin(hit.start)+hit.hours*60))+') — اختار وقت تاني'; }
 function roomBusyInfo(r){
   const st = roomState[r.id];
   const nm = nowMin(), td = todayStr();
@@ -362,12 +365,25 @@ function openBooking(roomId){
     '<label>عدد الساعات</label><select id="fHours">'+
       [1,2,3,4,5,6].map(h=>'<option value="'+h+'"'+(h===2?' selected':'')+'>'+h+(h===1?' ساعة':' ساعات')+'</option>').join('')+
     '</select>'+
+    '<div class="today-bookings" id="fBooked"></div>'+
     '<div class="conflict" id="fConflict"></div>'+
     '<div style="margin-top:18px"><button class="btn" onclick="submitBooking()">ابعت طلب الحجز</button></div>'+
     '<button class="btn ghost" style="margin-top:10px" onclick="closeModal()">إلغاء</button>'+
     '<div class="note">طلبك بيوصل للمكان على طول وهما بيأكدوه. عايز تأكيد أسرع؟ ابعتلهم واتساب بعد ما تبعت الطلب.</div>';
   ['fDate','fStart','fHours'].forEach(id=>document.getElementById(id).addEventListener('change', checkConflict));
+  document.getElementById('fDate').addEventListener('change', renderBookedInModal);
   document.getElementById('overlay').classList.add('open');
+  renderBookedInModal();
+  checkConflict();
+}
+function renderBookedInModal(){
+  const el=document.getElementById('fBooked'); if(!el||!bookingRoom) return;
+  const date=document.getElementById('fDate').value;
+  if(!date){ el.innerHTML=''; return; }
+  const list=bookingsFor(bookingRoom.id, date);
+  el.innerHTML = list.length
+    ? 'محجوز في اليوم ده: '+list.map(b=>'<span>'+fmtTime(b.start)+' لـ '+fmtTime(toHM(toMin(b.start)+b.hours*60))+'</span>').join('')
+    : 'كله فاضي في اليوم ده ✔';
 }
 function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
 /* ============ FEEDBACK ============ */
@@ -386,9 +402,8 @@ function checkConflict(){
   const date=document.getElementById('fDate').value, start=document.getElementById('fStart').value;
   const hours=parseInt(document.getElementById('fHours').value);
   if(!date||!start) return true;
-  const s=toMin(start), e=s+hours*60;
-  const hit = bookingsFor(bookingRoom.id, date).find(b=>{ const bs=toMin(b.start), be=bs+b.hours*60; return s<be && e>bs; });
-  if(hit){ c.style.display='block'; c.textContent='الوقت ده محجوز ('+fmtTime(hit.start)+' لـ '+fmtTime(toHM(toMin(hit.start)+hit.hours*60))+') — اختار وقت تاني'; return false; }
+  const hit = conflictHit(bookingRoom.id, date, start, hours);
+  if(hit){ c.style.display='block'; c.textContent=conflictMsg(bookingRoom.name, hit); return false; }
   c.style.display='none'; return true;
 }
 async function submitBooking(){
@@ -406,6 +421,15 @@ async function submitBooking(){
   if(online){
     try{
       const fresh = await loadState();
+      const freshBooks = (fresh.books&&fresh.books.list)||[];
+      bookings = freshBooks;
+      const hit = conflictHit(bookingRoom.id, date, start, hours, freshBooks);
+      if(hit){
+        const c=document.getElementById('fConflict');
+        c.style.display='block'; c.textContent=conflictMsg(bookingRoom.name, hit);
+        renderBookedInModal();
+        return;
+      }
       const reqs = fresh.reqs||{};
       reqs[req.id] = req;
       fresh.reqs = reqs;
@@ -512,6 +536,8 @@ async function setUntil(id, h){
 }
 async function acceptReq(id){
   const q = requests[id]; if(!q) return;
+  const hit = conflictHit(q.room, q.date, q.start, q.hours);
+  if(hit){ toast('مينفعش — '+conflictMsg(roomById(q.room).name, hit)); return; }
   bookings.push({id:q.id, room:q.room, name:q.name, phone:q.phone, date:q.date, start:q.start, hours:q.hours});
   delete requests[id];
   await saveBooks();
