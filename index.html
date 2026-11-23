@@ -144,9 +144,24 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
 .location-section{display:grid;grid-template-columns:1fr 1.2fr;gap:24px;align-items:center;margin:34px auto;padding:22px;background:#0d1120;border:1px solid #303654;border-radius:18px;max-width:900px}.location-section h2{margin-top:0}.location-copy p{color:#c4c9dc;line-height:1.9;margin:14px 0 20px}.location-section iframe{width:100%;height:310px;border:0;border-radius:12px;background:#171b2c}@media(max-width:650px){.location-section{grid-template-columns:1fr;margin:28px 12px;padding:18px}.location-section iframe{height:280px}}
 .social-links{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:24px auto 8px}.social-links a,.social-links button{display:inline-flex;align-items:center;gap:9px;padding:10px 15px;border:1px solid #343854;background:#111625;border-radius:12px;color:#e9eafa;text-decoration:none;font:inherit;cursor:pointer}.social-links a:hover,.social-links button:hover{border-color:#b85dfa;background:#1d1731}.social-icon{display:inline-grid;place-items:center;width:25px;height:25px;font-size:24px;line-height:1;font-weight:800}.social-icon.fb{color:#5fa0ff}.social-icon.tk{color:#fff;text-shadow:-2px 0 #25f4ee,2px 1px #fe2c55}.share-fallback{max-width:520px;margin:14px auto;text-align:right}.share-fallback textarea{width:100%;min-height:100px;direction:rtl}.share-fallback[hidden]{display:none}
 .social-icon.ig{color:#ff82c8;font-size:30px}
+
+/* Lightweight arcade decor, no external assets */
+.arcade-scene{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;contain:strict}
+.arcade-scene:before{content:"";position:absolute;inset:50% -50% -60%;background:linear-gradient(#34e0ff15 1px,transparent 1px),linear-gradient(90deg,#bc4fff15 1px,transparent 1px);background-size:80px 80px;transform:perspective(400px) rotateX(60deg);mask-image:linear-gradient(transparent,#000);animation:gridDrift 24s linear infinite}
+@keyframes gridDrift{to{background-position:0 80px}}
+.neon-speck{position:absolute;width:3px;height:3px;border-radius:50%;background:#55dfff;box-shadow:0 0 12px #55dfff88;opacity:.45;left:var(--x);top:var(--y);transform:translate(calc(var(--mx,0px)*var(--d)),calc(var(--my,0px)*var(--d)));transition:transform .8s ease-out;animation:speckPulse 7s ease-in-out infinite alternate;animation-delay:var(--delay)}
+.neon-speck:nth-child(even){background:#f75bd6;box-shadow:0 0 12px #ff3ec888}
+@keyframes speckPulse{to{opacity:.12}}
+.float-book{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom));left:20px;z-index:45;width:auto;padding:13px 23px;border-radius:30px;box-shadow:0 0 25px #b83eff44;font-weight:700;transition:opacity .2s,transform .2s}
+.float-book[hidden]{display:none}.float-book:focus-visible{outline:3px solid white;outline-offset:4px}
+@media(hover:hover) and (pointer:fine){body{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M7 11Q4 11 3 17L2 24Q3 29 8 25L12 21H20L24 25Q29 29 30 24L29 17Q28 11 25 11Z' fill='%2310172d' stroke='%2334e0ff' stroke-width='1.5'/%3E%3Cpath d='M8 14V21M5 17.5H12' stroke='%23ff60db' stroke-width='2'/%3E%3Ccircle cx='23' cy='15' r='1.5' fill='%23ff60db'/%3E%3Ccircle cx='26' cy='19' r='1.5' fill='%2334e0ff'/%3E%3C/svg%3E") 8 8,auto}input,textarea,[contenteditable=true]{cursor:text}button,a,select{cursor:pointer}}
+@media(max-width:650px){.arcade-scene:before{animation:none;opacity:.5}.neon-speck:nth-child(n+7){display:none}.float-book{left:14px;bottom:calc(14px + env(safe-area-inset-bottom));font-size:13px;padding:12px 18px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}.arcade-scene:before{opacity:.35}}
+
+.sound-toggle{display:block;margin:18px auto 0;padding:9px 14px;border:1px solid #343854;border-radius:12px;background:#111625;color:#b9c5e9;font:inherit;cursor:pointer;font-size:12px}.sound-toggle:focus-visible{outline:2px solid #34e0ff}
 </style>
 </head>
-<body>
+<body><div class="arcade-scene" aria-hidden="true"><i class="neon-speck" style="--x:7%;--y:13%;--d:0.15;--delay:-0s"></i><i class="neon-speck" style="--x:36%;--y:30%;--d:0.19;--delay:-1s"></i><i class="neon-speck" style="--x:65%;--y:47%;--d:0.23;--delay:-2s"></i><i class="neon-speck" style="--x:94%;--y:64%;--d:0.27;--delay:-3s"></i><i class="neon-speck" style="--x:23%;--y:81%;--d:0.31;--delay:-4s"></i><i class="neon-speck" style="--x:52%;--y:98%;--d:0.35;--delay:-5s"></i><i class="neon-speck" style="--x:81%;--y:15%;--d:0.39;--delay:-6s"></i><i class="neon-speck" style="--x:10%;--y:32%;--d:0.43;--delay:-7s"></i><i class="neon-speck" style="--x:39%;--y:49%;--d:0.47;--delay:-8s"></i><i class="neon-speck" style="--x:68%;--y:66%;--d:0.51;--delay:-9s"></i></div>
 <div class="glow-bg"></div>
 <div class="wrap">
   <header>
@@ -184,7 +199,8 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
     <br>
     <a class="wa" href="https://wa.me/201063436643" target="_blank" rel="noopener">واتساب: ‎0106 343 6643‎</a>
     <div style="margin-top:14px; font-size:12px; opacity:.75">الحجز من الموقع بيوصل للمكان فوراً وبيتأكد منهم</div>
-  <div class="social-links" aria-label="تابع DOES Underground">
+  <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="false">🔊 صوت الأزرار: شغال</button>
+<div class="social-links" aria-label="تابع DOES Underground">
 <a href="https://www.facebook.com/profile.php?id=61585240370723" target="_blank" rel="noopener" aria-label="DOES Underground على Facebook"><span class="social-icon fb" aria-hidden="true">f</span><span>Facebook</span></a>
 <a href="https://www.tiktok.com/@does_underground" target="_blank" rel="noopener" aria-label="DOES Underground على TikTok"><span class="social-icon tk" aria-hidden="true">♪</span><span>TikTok</span></a>
 <a href="https://www.instagram.com/does_underground" target="_blank" rel="noopener" aria-label="DOES Underground على Instagram"><span class="social-icon ig" aria-hidden="true">◎</span><span>Instagram</span></a>
@@ -216,6 +232,7 @@ footer{margin-top:50px; text-align:center; color:var(--dim); font-size:13px; lin
   <button class="btn small red" onclick="leaveAdmin()">خروج</button>
 </div></div>
 
+<button class="btn float-book" id="floatBook" type="button" hidden onclick="jumpToBooking()">🎮 احجز دلوقتي</button>
 <div class="toast" id="toast"></div>
 
 <!-- AdSense-ready: once a custom domain is live and approved, paste the AdSense snippet here and in <head>. -->
@@ -702,6 +719,30 @@ document.getElementById('welcome').addEventListener('click', e=>{ if(e.target.id
 
 setInterval(renderAll, 30000); // keep "busy until" fresh
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) syncNow(); });
+
+/* Decor controls never write booking data */
+function jumpToBooking(){document.getElementById('sections').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});toast('اختار الروم واضغط احجز');}
+(function initDecor(){
+ const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
+ const f=document.getElementById('floatBook');
+ function update(){const blocked=isAdmin||document.querySelector('#overlay.open,#welcome.open,#loginWall');f.hidden=!!blocked||scrollY<350;}
+ addEventListener('scroll',update,{passive:true});new MutationObserver(update).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','style']});update();
+ if(!reduced&&matchMedia('(pointer:fine)').matches){let queued=false,x=0,y=0;addEventListener('pointermove',e=>{x=(e.clientX/innerWidth-.5)*28;y=(e.clientY/innerHeight-.5)*28;if(!queued){queued=true;requestAnimationFrame(()=>{const b=document.querySelector('.arcade-scene');b.style.setProperty('--mx',x+'px');b.style.setProperty('--my',y+'px');queued=false;});}},{passive:true});}
+
+})();
+
+
+(function initClickSound(){
+ const toggle=document.getElementById('soundToggle');let muted=false,ctx;
+ try{muted=localStorage.getItem('dugSoundMuted')==='1';}catch(e){}
+ function label(){toggle.textContent=muted?'🔇 صوت الأزرار: مقفول':'🔊 صوت الأزرار: شغال';toggle.setAttribute('aria-pressed',String(muted));}
+ toggle.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('dugSoundMuted',muted?'1':'0');}catch(e){}label();});label();
+ document.addEventListener('click',e=>{
+ if(muted||e.target.closest('#soundToggle')||!e.target.closest('button,.btn'))return;
+ try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ctx=ctx||new AC();if(ctx.state==='suspended')ctx.resume();const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.setValueAtTime(640,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(400,ctx.currentTime+.045);g.gain.setValueAtTime(.018,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.055);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.06);}catch(e){}
+ });
+})();
+
 </script>
 </body>
 </html>
