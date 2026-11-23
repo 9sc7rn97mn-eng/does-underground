@@ -321,7 +321,7 @@ let bookings  = [];      // [{id,room,name,phone,date,start,hours,ts}]
 let requests  = {};      // reqId -> {id,room,name,phone,date,start,hours,ts}
 let ads       = {banner:{active:false,img:'',url:'',text:''}};
 let isAdmin = location.hash === ADMIN_HASH;
-let adminOk = sessionStorage.getItem('dugAdmin')==='1' && !!sessionStorage.getItem('dugTok');
+let adminOk = (localStorage.getItem('dugAdmin')==='1'||sessionStorage.getItem('dugAdmin')==='1') && !!(localStorage.getItem('dugTok')||sessionStorage.getItem('dugTok'));
 let online = false;
 let roomCfgMap = {};
 let adminUser = 'admin';
@@ -371,8 +371,8 @@ async function rpc(fn, args){
   if(!r.ok) throw new Error(fn+' '+r.status);
   return await r.json();
 }
-function adminTok(){ return sessionStorage.getItem('dugTok')||''; }
-function adminDrop(){ sessionStorage.removeItem('dugTok'); sessionStorage.removeItem('dugAdmin'); location.reload(); }
+function adminTok(){ return localStorage.getItem('dugTok')||sessionStorage.getItem('dugTok')||''; }
+function adminDrop(){ localStorage.removeItem('dugTok');localStorage.removeItem('dugAdmin');sessionStorage.removeItem('dugTok'); sessionStorage.removeItem('dugAdmin'); location.reload(); }
 async function loadState(){
   let lastErr;
   for(let i=0;i<3;i++){
@@ -691,7 +691,7 @@ function renderAdmin(){
   // Login credentials
   let credHtml = '<div class="adm-card" id="admCreds"><h3>بيانات دخول الإدارة</h3>'+
     '<label>اسم المستخدم</label><input id="cfgU" maxlength="30" value="'+esc(adminUser)+'">'+
-    '<label>كلمة السر الجديدة</label><input id="cfgP" maxlength="40" placeholder="سيبها فاضية لو مش عايز تغيرها">'+
+    '<label>كلمة السر الجديدة</label><input id="cfgP" type="password" autocomplete="new-password" maxlength="40" placeholder="سيبها فاضية لو مش عايز تغيرها">'+
     '<div style="margin-top:12px"><button class="btn small green" onclick="saveCreds()">حفظ</button></div></div>';
   secs.insertAdjacentHTML('afterbegin', reqHtml+renderWaitlist()+roomHtml+priceHtml+bkHtml+adHtml+credHtml);
   // restore preserved ad form values
@@ -744,7 +744,7 @@ async function saveCreds(){
   try{ await adminOp('set_creds',{u,p}); toast('اتحفظت ✔'); document.getElementById('cfgP').value=''; }
   catch(e){ if(e.res&&e.res.error==='weak') toast('كلمة السر لازم تكون 10 حروف على الأقل'); else toast('مشكلة اتصال — جرب تاني'); }
 }
-async function leaveAdmin(){ try{ await adminOp('logout',{}); }catch(e){} sessionStorage.removeItem('dugTok'); sessionStorage.removeItem('dugAdmin'); location.hash=''; location.reload(); }
+async function leaveAdmin(){ try{ await adminOp('logout',{}); }catch(e){} localStorage.removeItem('dugTok');localStorage.removeItem('dugAdmin');sessionStorage.removeItem('dugTok'); sessionStorage.removeItem('dugAdmin'); location.hash=''; location.reload(); }
 async function tryLogin(){
   const u=(document.getElementById('loginU').value||'').trim();
   const p=(document.getElementById('loginP').value||'').trim();
@@ -752,7 +752,7 @@ async function tryLogin(){
   try{ j = await rpc('dug_admin_login',{u,p}); }
   catch(e){ document.getElementById('loginErr').textContent='مفيش اتصال بالسيرفر دلوقتي — جرب تاني بعد ثواني'; return; }
   if(j && j.ok){
-    sessionStorage.setItem('dugTok', j.token); sessionStorage.setItem('dugAdmin','1'); adminOk=true;
+    localStorage.setItem('dugTok',j.token);localStorage.setItem('dugAdmin','1');sessionStorage.setItem('dugTok', j.token); sessionStorage.setItem('dugAdmin','1'); adminOk=true;
     document.getElementById('loginWall').style.display='none';
     document.getElementById('adminBar').classList.add('open');
     await syncNow(); renderAll();
@@ -770,8 +770,9 @@ if(isAdmin && !adminOk){
   w.style.cssText='position:fixed;inset:0;background:#05070fee;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px';
   w.innerHTML='<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:30px 24px;width:100%;max-width:360px">'+
     '<h3 style="margin-bottom:4px">دخول الإدارة</h3><div class="sub" style="margin-bottom:16px">منطقة خاصة بصاحب المحل بس</div>'+
-    '<label>اسم المستخدم</label><input id="loginU" autocomplete="username">'+
+    '<label>اسم المستخدم</label><input id="loginU" value="admin" autocomplete="username" autocapitalize="none" spellcheck="false">'+
     '<label>كلمة السر</label><input id="loginP" type="password" autocomplete="current-password">'+
+    '<div class="note">الدخول بيتحفظ على الجهاز ده لحد تسجيل الخروج أو انتهاء الجلسة. استخدم جهازك الشخصي بس.</div>'+
     '<div id="loginErr" style="color:var(--busy);font-size:13px;min-height:20px;margin-top:8px"></div>'+
     '<button class="btn" onclick="tryLogin()">دخول</button></div>';
   document.body.appendChild(w);
