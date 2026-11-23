@@ -379,7 +379,7 @@ async function loadState(){
       if(adminOk){
         const j = await rpc('dug_admin_state',{t:adminTok()});
         if(j&&j.ok){try{const lp=await rpc('dug_admin_points',{t:adminTok()});if(lp.ok)adminPointBalances=lp.balances||{};}catch(e){adminPointBalances=null;}}
-        if(j && j.ok) return j.data||{};
+        if(j && j.ok){try{const w=await rpc('dug_admin_waitlist',{t:adminTok()});adminWaitlist=w.ok?w.entries:null;}catch(e){adminWaitlist=null;} return j.data||{};}
         if(j && j.error==='auth'){ adminDrop(); return {}; }
         throw new Error('admin state');
       }
@@ -473,6 +473,7 @@ async function saveAd(){
 
 /* ============ BOOKING MODAL ============ */
 let bookingRoom = null;
+let adminWaitlist=null;
 function openBooking(roomId){
   bookingRoom = roomById(roomId);
   const m = document.getElementById('modal');
@@ -495,7 +496,8 @@ function openBooking(roomId){
     '<div class="today-bookings" id="fBooked"></div>'+
     '<div class="deposit-box" id="fDeposit" aria-live="polite"></div>'+
     '<div class="conflict" id="fConflict"></div>'+
-    '<div style="margin-top:18px"><button class="btn" onclick="submitBooking()">ابعت طلب الحجز</button></div>'+
+    '<div id="fWait" hidden class="deposit-box"><b>المعاد ده محجوز</b><p>سجل اسمك ورقمك، ولو المعاد فضي المكان يقدر يكلمك على واتساب. دي قائمة انتظار، مش حجز أو ضمان للتوفر. متحولش عربون.</p><button id="waitJoinBtn" class="btn ghost" onclick="joinWaitlist()">سجل في قائمة الانتظار</button></div>'+
+    '<div style="margin-top:18px"><button id="fSubmit" class="btn" onclick="submitBooking()">ابعت طلب الحجز</button></div>'+
     '<button class="btn ghost" style="margin-top:10px" onclick="closeModal()">إلغاء</button>'+
     '<div class="note">الحجز بيتأكد من المكان بعد مراجعة العربون وتوفر المعاد.</div>';
   prefillCustomer();
@@ -534,6 +536,7 @@ function checkConflict(){
   const hours=parseInt(document.getElementById('fHours').value);
   if(!date||!start) return true;
   const hit = conflictHit(bookingRoom.id, date, start, hours);
+  const wb=document.getElementById('fWait'),sb=document.getElementById('fSubmit'),dp=document.getElementById('fDeposit');if(wb)wb.hidden=!hit;if(sb)sb.hidden=!!hit;if(dp)dp.hidden=!!hit;
   if(hit){ c.style.display='block'; c.textContent=conflictMsg(bookingRoom.name, hit); return false; }
   c.style.display='none'; return true;
 }
@@ -563,7 +566,7 @@ async function submitBooking(){
       try{ const st = await rpc('dug_public_state'); bookings = (st.books&&st.books.list)||bookings; }catch(e){}
       const c=document.getElementById('fConflict');
       c.style.display='block'; c.textContent=conflictMsg(bookingRoom.name, {start:res.start, hours:parseInt(res.hours)});
-      renderBookedInModal();
+      renderBookedInModal();checkConflict();
       return;
     }
     serverBusy(); return;
@@ -587,6 +590,39 @@ async function submitBooking(){
   celebrateBookingRequest();
 }
 document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
+
+
+async function joinWaitlist(){
+ const name=document.getElementById('fName').value.trim(),phone=document.getElementById('fPhone').value.trim();
+ if(!name){toast('اكتب اسمك الأول');return;}if(!egyptWhatsAppNumber(phone)){toast('اكتب رقم موبايل مصري كامل وصحيح');return;}
+ const date=document.getElementById('fDate').value,start=document.getElementById('fStart').value,hours=Number(document.getElementById('fHours').value);
+ const btn=document.getElementById('waitJoinBtn');btn.disabled=true;
+ try{const j=await rpc('dug_wait_join',{p:{room:bookingRoom.id,date,start,hours,name,phone}});
+ if(!j.ok){if(j.error==='available'){toast('المعاد بقى متاح، راجع التوفر وابعت طلب حجز');await syncNow();renderBookedInModal();checkConflict();return;}toast(j.error==='limit'?'وصلت للحد الأقصى من طلبات الانتظار':'تعذر التسجيل، راجع البيانات وحاول تاني');return;}
+ rememberCustomer(name,phone);document.getElementById('modal').innerHTML='<div class="success"><h4>انت في قائمة الانتظار</h4><p>المكان يقدر يكلمك على واتساب لو المعاد فضي. ده مش تأكيد حجز، ومفيش عربون مطلوب لقائمة الانتظار.</p><button class="btn ghost" onclick="closeModal()">تمام</button></div>';
+ }catch(e){toast('مشكلة اتصال، حاول تاني');}finally{if(btn.isConnected)btn.disabled=false;}
+}
+function renderWaitlist(){
+ let h='<div class="adm-card" id="admWaitlist"><h3>قائمة الانتظار</h3><div class="note">الأقدم أولاً لكل روم ومعاد. الإبلاغ يدوي، مش تأكيد حجز. بعد التواصل امسح السجل لو خلصت منه.</div>';
+ if(adminWaitlist===null)return h+'<p>تعذر تحميل القائمة، حاول تحديث الصفحة.</p></div>';
+ if(!adminWaitlist.length)return h+'<p class="note">مفيش حد في الانتظار.</p></div>';
+ const groups=new Map();for(const w of adminWaitlist){const k=[w.room,w.date,w.start,w.hours].join('|');if(!groups.has(k))groups.set(k,[]);groups.get(k).push(w);}
+ for(const list of groups.values()){
+ const w=list[0],r=roomById(w.room),hit=conflictHit(w.room,w.date,w.start,w.hours),past=w.date<todayStr()||(w.date===todayStr()&&toMin(w.start)<nowMin());
+ h+='<div class="deposit-box"><b>'+esc(r.name)+' · '+esc(w.date)+' · '+fmtTime(w.start)+' ('+w.hours+' س)</b><div class="note">'+(past?'المعاد عدى':hit?'لسه محجوز':'المعاد متاح دلوقتي')+'</div>';
+ list.forEach((q,i)=>{h+='<div class="req"><div><b>'+(i+1)+'. '+esc(q.name)+'</b><br><span dir="ltr">'+esc(q.phone)+'</span></div><div class="acts">'+(i===0&&!hit&&!past?'<button class="btn small green" onclick="notifyWaiting(\''+q.id+'\')">ابلغ أول واحد في الانتظار</button>':'')+'<button class="btn small red" onclick="removeWaiting(\''+q.id+'\')">مسح</button></div></div>';});h+='</div>';
+ }return h+'</div>';
+}
+async function removeWaiting(id){if(!adminOk||!confirm('تمسح الاسم ده من قائمة الانتظار؟'))return;try{const j=await rpc('dug_wait_remove',{t:adminTok(),w:id});if(!j.ok)throw Error();await syncNow();toast('اتمسح من الانتظار');}catch(e){toast('تعذر المسح');}}
+async function notifyWaiting(id){
+ if(!adminOk)return;await syncNow();const w=(adminWaitlist||[]).find(x=>x.id===id);if(!w)return;
+ const first=adminWaitlist.find(x=>x.room===w.room&&x.date===w.date&&x.start===w.start&&x.hours===w.hours);
+ if(first.id!==id||conflictHit(w.room,w.date,w.start,w.hours)){toast('القائمة أو التوفر اتغير، راجعها تاني');return;}
+ const ph=egyptWhatsAppNumber(w.phone);if(!ph){toast('رقم الموبايل مش صحيح');return;}
+ const msg='أهلاً '+w.name+'، معاك DOES Underground. المعاد اللي كنت مستنيه بقى متاح دلوقتي: '+roomById(w.room).name+' يوم '+w.date+' من '+fmtTime(w.start)+' لمدة '+w.hours+' ساعة. لو لسه مناسب، ابعت طلب حجز من الموقع. التوفر ممكن يتغير والحجز بيتأكد بعد مراجعة المكان. '+BOOKING_SITE_URL;
+ document.getElementById('modal').innerHTML='<h3>معاينة رسالة الانتظار</h3><p class="note">فتح واتساب مش إرسال تلقائي ولا تأكيد حجز.</p><textarea id="waitPreview" readonly style="height:190px"></textarea><a id="waitLink" class="btn green" target="_blank" rel="noopener">افتح واتساب</a><button class="btn ghost" onclick="closeModal()">إغلاق</button>';
+ document.getElementById('waitPreview').value=msg;document.getElementById('waitLink').href='https://wa.me/'+ph+'?text='+encodeURIComponent(msg);document.getElementById('overlay').classList.add('open');
+}
 
 /* ============ ADMIN ============ */
 function updateReqCount(){
@@ -656,7 +692,7 @@ function renderAdmin(){
     '<label>اسم المستخدم</label><input id="cfgU" maxlength="30" value="'+esc(adminUser)+'">'+
     '<label>كلمة السر الجديدة</label><input id="cfgP" maxlength="40" placeholder="سيبها فاضية لو مش عايز تغيرها">'+
     '<div style="margin-top:12px"><button class="btn small green" onclick="saveCreds()">حفظ</button></div></div>';
-  secs.insertAdjacentHTML('afterbegin', reqHtml+roomHtml+priceHtml+bkHtml+adHtml+credHtml);
+  secs.insertAdjacentHTML('afterbegin', reqHtml+renderWaitlist()+roomHtml+priceHtml+bkHtml+adHtml+credHtml);
   // restore preserved ad form values
   Object.keys(keep).forEach(id=>{ const el=document.getElementById(id); if(el){ if(el.type==='checkbox') el.checked=keep[id]; else el.value=keep[id]; } });
   // guard against duplicates on re-render
@@ -688,7 +724,7 @@ async function acceptReq(id){
   renderAll();
 }
 async function declineReq(id){ try{ await adminOp('decline',{id}); toast('اترفض الطلب'); }catch(e){ toast('مشكلة اتصال — جرب تاني'); } renderAll(); }
-async function delBooking(id){ try{ await adminOp('del_book',{id}); toast('اتمسح الحجز'); }catch(e){ toast('مشكلة اتصال — جرب تاني'); } renderAll(); }
+async function delBooking(id){ try{ await adminOp('del_book',{id}); toast('اتمسح الحجز · راجع قائمة الانتظار'); }catch(e){ toast('مشكلة اتصال — جرب تاني'); } renderAll(); }
 async function clearOldBookings(){
   try{ await adminOp('clear_old',{}); toast('اتمسحت القديمة'); }catch(e){ toast('مشكلة اتصال — جرب تاني'); }
   renderAll();
