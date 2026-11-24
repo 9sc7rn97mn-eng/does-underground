@@ -236,6 +236,7 @@ header .logo{width:94px;animation:none;filter:none;margin-bottom:20px}header{pad
 
   <div id="sections"></div>
 
+<section class="deposit-box" id="resultCardSection"><h2 style="font-size:21px;margin-bottom:8px">مين كسب القعدة؟</h2><p style="font-size:14px;line-height:1.8;margin-bottom:13px">اكتب أساميكم المستعارة والنتيجة، واحفظ كارت للستوري بهوية DOES.</p><button class="btn" type="button" onclick="openResultCard()">اعمل كارت النتيجة</button><p class="note" style="margin-top:10px">بإدخال اللاعبين، مش نتيجة رسمية للمكان. مفيش نشر تلقائي.</p></section>
 <section class="deposit-box site-add-card" id="siteAddCard" aria-labelledby="siteAddTitle"><div style="display:flex;align-items:center;gap:13px;margin-bottom:12px"><img src="./does-icon-192.png" width="62" height="62" alt="أيقونة DOES" style="border-radius:15px"><div><h2 id="siteAddTitle" style="margin:0;font-size:20px">خلّينا أقرب بضغطة</h2><p style="color:var(--dim);font-size:13px;margin-top:5px">DOES على شاشة موبايلك</p></div></div><p style="font-size:14px;line-height:1.8;margin-bottom:12px">أضف الموقع للشاشة الرئيسية، وارجع للحجز بسهولة.</p><button class="btn" id="siteInstallButton" type="button" hidden>أضف DOES للشاشة الرئيسية</button><button class="btn ghost" type="button" onclick="openSiteAddHelp()">إزاي أضيفه؟</button><p class="note" style="margin-top:12px">اختصار للموقع أو تثبيت ويب حسب المتصفح، مش تطبيق من المتجر. الحجز ومراجعة التوفر محتاجين إنترنت.</p></section>
   <h2><span class="bar"></span>رأيك يهمنا</h2>
   <div class="card feedback">
@@ -959,6 +960,7 @@ function openSiteAddHelp(){
  document.getElementById('overlay').classList.add('open');document.getElementById('modal').scrollTop=0;
 }
 </script>
+<script src="./does-result.js"></script>
 </body>
 </html>
 
