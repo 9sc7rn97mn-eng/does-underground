@@ -412,7 +412,7 @@ async function loadState(){
       if(adminOk){
         const j = await rpc('dug_admin_state',{t:adminTok()});
         if(j&&j.ok){try{const lp=await rpc('dug_admin_points',{t:adminTok()});if(lp.ok)adminPointBalances=lp.balances||{};}catch(e){adminPointBalances=null;}}
-        if(j && j.ok){try{const vv=await rpc('dug_admin_visits',{t:adminTok()});adminVisits=vv&&vv.ok?vv:null;}catch(e){adminVisits=null;}}
+        if(j && j.ok){try{const vv=await rpc('dug_admin_visits',{t:adminTok()});adminVisits=vv&&vv.ok?vv:null;}catch(e){adminVisits=null;}}if(j && j.ok){try{const dd=await rpc('dug_admin_daily',{t:adminTok()});adminDaily=dd&&dd.ok?dd:null;}catch(e){adminDaily=null;}}
         if(j && j.ok){try{const w=await rpc('dug_admin_waitlist',{t:adminTok()});adminWaitlist=w.ok?w.entries:null;}catch(e){adminWaitlist=null;} return j.data||{};}
         if(j && j.error==='auth'){ adminDrop(); return {}; }
         throw new Error('admin state');
@@ -783,7 +783,7 @@ function renderAdmin(){
     '<label>اسم المستخدم</label><input id="cfgU" maxlength="30" value="'+esc(adminUser)+'">'+
     '<label>كلمة السر الجديدة</label><input id="cfgP" type="password" autocomplete="new-password" maxlength="40" placeholder="سيبها فاضية لو مش عايز تغيرها">'+
     '<div style="margin-top:12px"><button class="btn small green" onclick="saveCreds()">حفظ</button></div></div>';
-  secs.insertAdjacentHTML('afterbegin', reqHtml+renderVisitsAdmin()+renderWaitlist()+renderTournamentAdmin()+renderCustomersAdmin()+roomHtml+priceHtml+bkHtml+adHtml+credHtml);
+  secs.insertAdjacentHTML('afterbegin', reqHtml+renderDailyAdmin()+renderVisitsAdmin()+renderWaitlist()+renderTournamentAdmin()+renderCustomersAdmin()+roomHtml+priceHtml+bkHtml+adHtml+credHtml);
   // restore preserved ad form values
   Object.keys(keep).forEach(id=>{ const el=document.getElementById(id); if(el){ if(el.type==='checkbox') el.checked=keep[id]; else el.value=keep[id]; } });
   // guard against duplicates on re-render
@@ -963,7 +963,21 @@ function openSiteAddHelp(){
 </script>
 <script src="./does-result.js"></script><script>let doesExtrasP;function doesLoad(n){if(window[n])return window[n]();doesExtrasP=doesExtrasP||new Promise((ok,no)=>{const e=document.createElement("script");e.src="./does-extras.js";e.onload=ok;e.onerror=()=>{doesExtrasP=null;no();};document.head.appendChild(e);});doesExtrasP.then(()=>window[n]()).catch(()=>{try{toast("تعذر التحميل. راجع الاتصال وحاول تاني.")}catch(e){}});}</script>
 <script>
-var adminVisits=null;
+var adminVisits=null,adminDaily=null;
+function renderDailyAdmin(){
+ let h='<div class="adm-card" id="admDaily"><h3>ملخص النهارده</h3>';
+ const v=adminDaily;
+ if(!v)return h+'<p class="note">تعذر تحميل الملخص، حدّث الصفحة.</p></div>';
+ const n=x=>Number(x||0).toLocaleString('ar-EG'),pc=(a,b)=>b>0?' ('+n(Math.round(a/b*100))+'٪)':'';
+ const box=(t,a,b)=>'<div style="flex:1;min-width:84px;background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center"><div style="font-size:12px;color:var(--dim)">'+t+'</div><div style="font-size:21px;font-weight:700;margin:4px 0">'+n(a)+'</div><div style="font-size:11px;color:var(--dim)">'+b+'</div></div>';
+ const bar=(w,t)=>'<div style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:6px"><div style="height:18px;border-radius:5px;background:linear-gradient(90deg,var(--pink),var(--blue));width:'+Math.max(4,Math.min(100,w))+'%"></div><span style="white-space:nowrap">'+t+'</span></div>';
+ const base=Math.max(1,v.visitors,v.requests);
+ h+='<div style="display:flex;gap:8px;flex-wrap:wrap">'+box('زوّار',v.visitors,n(v.visits)+' زيارة')+box('طلبات حجز',v.requests,'جديدة النهارده')+box('اتقبلت',v.accepted,'من '+n(v.requests)+' طلب جديد')+'</div>';
+ h+='<div style="margin-top:12px;font-size:13px">من زيارة لحجز:</div>'+bar(100*v.visitors/base,n(v.visitors)+' زائر')+bar(100*v.requests/base,n(v.requests)+' طلب'+pc(v.requests,v.visitors))+bar(100*v.accepted/base,n(v.accepted)+' اتقبل'+pc(v.accepted,v.visitors));
+ let top='';try{if(v.topRoom)top='أكتر روم: '+roomById(v.topRoom).name;}catch(e){}
+ h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'+box('لسه مستنية',v.pending,'طلبات')+box('حجوزات النهارده',v.bookingsToday,top||'—')+box('ساعات النقاط',v.pointsHours,'اتقبلت النهارده')+'</div>';
+ return h+'<p class="note" style="margin-top:12px">الزائر = متصفح واحد في اليوم، فالنسب تقريبية. طلبات الحجز والقبول بتتعد من '+(v.since||'النهارده')+' بس. طلبات "لسه مستنية" وحجوزات النهارده من البيانات الحالية. الطلبات المرفوضة النهارده: '+n(v.declined)+'.</p></div>';
+}
 function renderVisitsAdmin(){
  let h='<div class="adm-card" id="admVisits"><h3>زيارات الموقع</h3>';
  const v=adminVisits;
