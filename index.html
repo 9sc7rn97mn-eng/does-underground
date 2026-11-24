@@ -870,9 +870,8 @@ if(isAdmin && !adminOk){
   w.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();tryLogin();}});
 }
 if(isAdmin && adminOk) document.getElementById('adminBar').classList.add('open');
-renderAll();
-syncNow();
-setInterval(syncNow, 45000);
+function dugBoot(){ renderAll(); syncNow(); setInterval(syncNow, 45000); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',dugBoot); else dugBoot();
 /* ============ WELCOME ============ */
 function closeWelcome(){ document.getElementById('welcome').classList.remove('open'); }
 document.getElementById('welcome').addEventListener('click', e=>{ if(e.target.id==='welcome') closeWelcome(); });
