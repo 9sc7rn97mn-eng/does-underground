@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="./does-icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./does-icon-192.png">
+<meta name="theme-color" content="#05070f">
+<meta name="apple-mobile-web-app-title" content="DOES">
 <title>DOES Underground | PlayStation • Billiard & Ping</title>
 <meta name="description" content="احجز رومك في DOES Underground - بلايستيشن وبلياردو وبينج بونج. شوف الرومات الفاضية دلوقتي واحجز مكانك.">
 <meta property="og:title" content="DOES Underground | احجز رومك">
@@ -231,6 +236,7 @@ header .logo{width:94px;animation:none;filter:none;margin-bottom:20px}header{pad
 
   <div id="sections"></div>
 
+<section class="deposit-box site-add-card" id="siteAddCard" aria-labelledby="siteAddTitle"><div style="display:flex;align-items:center;gap:13px;margin-bottom:12px"><img src="./does-icon-192.png" width="62" height="62" alt="أيقونة DOES" style="border-radius:15px"><div><h2 id="siteAddTitle" style="margin:0;font-size:20px">خلّينا أقرب بضغطة</h2><p style="color:var(--dim);font-size:13px;margin-top:5px">DOES على شاشة موبايلك</p></div></div><p style="font-size:14px;line-height:1.8;margin-bottom:12px">أضف الموقع للشاشة الرئيسية، وارجع للحجز بسهولة.</p><button class="btn" id="siteInstallButton" type="button" hidden>أضف DOES للشاشة الرئيسية</button><button class="btn ghost" type="button" onclick="openSiteAddHelp()">إزاي أضيفه؟</button><p class="note" style="margin-top:12px">اختصار للموقع أو تثبيت ويب حسب المتصفح، مش تطبيق من المتجر. الحجز ومراجعة التوفر محتاجين إنترنت.</p></section>
   <h2><span class="bar"></span>رأيك يهمنا</h2>
   <div class="card feedback">
     <div style="font-size:15px; margin-bottom:4px">ملاحظاتك عن المكان وتحب نطور ايه؟</div>
@@ -938,6 +944,21 @@ function prefillCustomer(){try{const d=JSON.parse(localStorage.getItem('dugCusto
 function forgetCustomer(){if(localStorage.getItem('dugReferral')&&!confirm('مسح البيانات هيشيل مفتاح مكافآت الدعوة من الجهاز ده. احتفظ بكود دعوتك وكلم المكان لو محتاج ترجع الوصول. تكمل؟'))return;try{localStorage.removeItem('dugCustomer');localStorage.removeItem('dugReferral');}catch(e){}const n=document.getElementById('fName'),p=document.getElementById('fPhone');if(n)n.value='';if(p)p.value='';const row=document.getElementById('returningCustomer');if(row)row.hidden=true;toast('اتمسحت البيانات المحفوظة على الجهاز ده');}
 
 </script>
-<script>(function(){const sign=document.getElementById('doesSign');let timer;sign.addEventListener('click',e=>{e.stopPropagation();clearTimeout(timer);sign.classList.add('lit');timer=setTimeout(()=>sign.classList.remove('lit'),1800);});})();</script></body>
+<script>(function(){const sign=document.getElementById('doesSign');let timer;sign.addEventListener('click',e=>{e.stopPropagation();clearTimeout(timer);sign.classList.add('lit');timer=setTimeout(()=>sign.classList.remove('lit'),1800);});})();</script><script>
+/* Optional home-screen site install. No offline cache or booking promises. */
+let doesInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();doesInstallPrompt=e;document.getElementById('siteInstallButton').hidden=false;});
+window.addEventListener('appinstalled',function(){doesInstallPrompt=null;document.getElementById('siteInstallButton').hidden=true;});
+document.getElementById('siteInstallButton').addEventListener('click',async function(){
+ if(!doesInstallPrompt){openSiteAddHelp();return;}
+ const prompt=doesInstallPrompt;doesInstallPrompt=null;this.hidden=true;
+ try{await prompt.prompt();await prompt.userChoice;}catch(e){openSiteAddHelp();}
+});
+function openSiteAddHelp(){
+ document.getElementById('modal').innerHTML='<h3>DOES على شاشة موبايلك</h3><p class="note">الإضافة باختيارك، ومش بتتم تلقائي. دي نسخة ويب للموقع، مش تطبيق من المتجر.</p><div class="deposit-box"><h4>iPhone / iPad · Safari</h4><p style="line-height:1.9;margin-top:8px">افتح الموقع في Safari، ومن مشاركة (Share) اختار إضافة إلى الشاشة الرئيسية (Add to Home Screen)، وبعدين إضافة (Add). ممكن تلاقي مشاركة داخل قائمة الصفحة. لو ظهر Open as Web App تقدر تفعّله.</p></div><div class="deposit-box"><h4>Android · Chrome</h4><p style="line-height:1.9;margin-top:8px">افتح الموقع في Chrome، واضغط قائمة ⋮، ثم تثبيت وإنشاء اختصار (Install and create shortcut)، واختار تثبيت أو إنشاء اختصار، وكمّل الخطوات. في نسخ تانية بتظهر إضافة إلى الشاشة الرئيسية مباشرة.</p></div><p class="note">لو فاتح من داخل واتساب أو تيليجرام، افتحه في Safari أو Chrome الأول. أسماء القوائم وشكل الأيقونة ممكن يختلفوا حسب الجهاز والمتصفح. على الكمبيوتر راجع قائمة المتصفح لخيار التثبيت لو متاح.</p><p class="note">الحجز ومراجعة التوفر محتاجين إنترنت. الإضافة مش بتأكد أي حجز ومش بتفعّل إشعارات.</p><button class="btn ghost" type="button" onclick="closeModal()">تمام</button>';
+ document.getElementById('overlay').classList.add('open');document.getElementById('modal').scrollTop=0;
+}
+</script>
+</body>
 </html>
 
