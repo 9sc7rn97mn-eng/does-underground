@@ -794,7 +794,7 @@ function renderAdmin(){
 }
 function esc(s){ return String(s||'').replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2600); }
-function scrollToEl(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+function scrollToEl(id){ const el=document.getElementById(id); if(!el){toast('القسم ده لسه بيتحمل — جرب تاني');return;} const nav=document.querySelector('.does-nav'); const off=(nav&&getComputedStyle(nav).position==='sticky'?nav.getBoundingClientRect().height:0)+16; const y=Math.max(0,el.getBoundingClientRect().top+(window.pageYOffset||document.documentElement.scrollTop)-off); try{window.scrollTo({top:y,behavior:'auto'});}catch(e){window.scrollTo(0,y);} el.style.transition='box-shadow .3s'; el.style.boxShadow='0 0 0 2px var(--pink)'; setTimeout(()=>{el.style.boxShadow='';},1200); }
 async function toggleBusy(id){
   const st = roomState[id]||{};
   if(st.busy){ roomState[id]={busy:false, until:null}; toast('الروم بقت فاضية'); }
