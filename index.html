@@ -412,6 +412,7 @@ async function loadState(){
       if(adminOk){
         const j = await rpc('dug_admin_state',{t:adminTok()});
         if(j&&j.ok){try{const lp=await rpc('dug_admin_points',{t:adminTok()});if(lp.ok)adminPointBalances=lp.balances||{};}catch(e){adminPointBalances=null;}}
+        if(j && j.ok){try{const vv=await rpc('dug_admin_visits',{t:adminTok()});adminVisits=vv&&vv.ok?vv:null;}catch(e){adminVisits=null;}}
         if(j && j.ok){try{const w=await rpc('dug_admin_waitlist',{t:adminTok()});adminWaitlist=w.ok?w.entries:null;}catch(e){adminWaitlist=null;} return j.data||{};}
         if(j && j.error==='auth'){ adminDrop(); return {}; }
         throw new Error('admin state');
@@ -782,7 +783,7 @@ function renderAdmin(){
     '<label>اسم المستخدم</label><input id="cfgU" maxlength="30" value="'+esc(adminUser)+'">'+
     '<label>كلمة السر الجديدة</label><input id="cfgP" type="password" autocomplete="new-password" maxlength="40" placeholder="سيبها فاضية لو مش عايز تغيرها">'+
     '<div style="margin-top:12px"><button class="btn small green" onclick="saveCreds()">حفظ</button></div></div>';
-  secs.insertAdjacentHTML('afterbegin', reqHtml+renderWaitlist()+renderTournamentAdmin()+renderCustomersAdmin()+roomHtml+priceHtml+bkHtml+adHtml+credHtml);
+  secs.insertAdjacentHTML('afterbegin', reqHtml+renderVisitsAdmin()+renderWaitlist()+renderTournamentAdmin()+renderCustomersAdmin()+roomHtml+priceHtml+bkHtml+adHtml+credHtml);
   // restore preserved ad form values
   Object.keys(keep).forEach(id=>{ const el=document.getElementById(id); if(el){ if(el.type==='checkbox') el.checked=keep[id]; else el.value=keep[id]; } });
   // guard against duplicates on re-render
@@ -961,6 +962,28 @@ function openSiteAddHelp(){
 }
 </script>
 <script src="./does-result.js"></script><script>let doesExtrasP;function doesLoad(n){if(window[n])return window[n]();doesExtrasP=doesExtrasP||new Promise((ok,no)=>{const e=document.createElement("script");e.src="./does-extras.js";e.onload=ok;e.onerror=()=>{doesExtrasP=null;no();};document.head.appendChild(e);});doesExtrasP.then(()=>window[n]()).catch(()=>{try{toast("تعذر التحميل. راجع الاتصال وحاول تاني.")}catch(e){}});}</script>
-</body>
+<script>
+var adminVisits=null;
+function renderVisitsAdmin(){
+ let h='<div class="adm-card" id="admVisits"><h3>زيارات الموقع</h3>';
+ const v=adminVisits;
+ if(!v)return h+'<p class="note">تعذر تحميل الإحصائيات، حدّث الصفحة.</p></div>';
+ const n=x=>Number(x||0).toLocaleString('ar-EG'),box=(t,a,b)=>'<div style="flex:1;min-width:84px;background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center"><div style="font-size:12px;color:var(--dim)">'+t+'</div><div style="font-size:21px;font-weight:700;margin:4px 0">'+n(a)+'</div><div style="font-size:11px;color:var(--dim)">'+n(b)+' زيارة</div></div>';
+ h+='<div style="display:flex;gap:8px;flex-wrap:wrap">'+box('النهارده',v.today_visitors,v.today_visits)+box('آخر 7 أيام',v.d7_visitors,v.d7_visits)+box('آخر 30 يوم',v.d30_visitors,v.d30_visits)+box('الإجمالي',v.all_visitors,v.all_visits)+'</div>';
+ const d=v.daily||[],mx=Math.max(1,...d.map(x=>x.visitors));
+ if(d.length)h+='<div style="margin-top:14px;font-size:13px">آخر 14 يوم (عدد الزوّار):</div><div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:8px;direction:ltr">'+d.map(x=>'<div title="'+x.day+': '+x.visitors+'" style="flex:1;background:linear-gradient(var(--pink),var(--blue));border-radius:4px 4px 0 0;height:'+Math.max(6,Math.round(x.visitors/mx*80))+'px"></div>').join('')+'</div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);direction:ltr;margin-top:3px"><span>'+d[0].day+'</span><span>'+d[d.length-1].day+'</span></div>';
+ else h+='<p class="note" style="margin-top:12px">لسه مفيش زيارات متسجلة.</p>';
+ return h+'<p class="note" style="margin-top:12px">العدّ بدأ من '+(v.since||'أول زيارة')+'. الزائر = موبايل أو متصفح واحد في اليوم، والزيارة = فتحة جديدة للموقع. دخولك كإدارة والروبوتات مش بتتحسب. لو حد مسح بيانات المتصفح أو دخل من جهاز تاني بيتحسب مرة جديدة.</p></div>';
+}
+(function(){try{
+ if(location.hostname==='localhost'||location.hostname==='127.0.0.1'||navigator.webdriver||/bot|crawl|spider|headless|preview|lighthouse/i.test(navigator.userAgent))return;
+ if(location.hash===ADMIN_HASH||localStorage.getItem('dugAdmin')==='1'||sessionStorage.getItem('dugAdmin')==='1')return;
+ if(sessionStorage.getItem('dugV'))return;
+ setTimeout(()=>{ if(document.visibilityState!=='visible'&&!document.hasFocus())return;
+  let id=localStorage.getItem('dugVid');if(!id||!/^[A-Za-z0-9_-]{16,48}$/.test(id)){const a=new Uint8Array(16);crypto.getRandomValues(a);id=[...a].map(x=>x.toString(36).padStart(2,'0')).join('');localStorage.setItem('dugVid',id);}
+  sessionStorage.setItem('dugV','1');rpc('dug_track_visit',{v:id}).catch(()=>{sessionStorage.removeItem('dugV');});
+ },2500);
+}catch(e){}})();
+</script></body>
 </html>
 
