@@ -249,8 +249,8 @@ button:focus-visible,.btn:focus-visible{outline:2px solid #58e6ff;outline-offset
     <img class="welcome-logo" id="welcomeLogo" alt="DOES Underground">
     <div class="welcome-title">نورت DOES Underground ✨</div>
     <div class="welcome-sub">اتفضل احجز في الوقت المناسب ليك</div>
-    <button class="btn" onclick="closeWelcome()">ابدأ الحجز</button>
-    <div class="welcome-hint">دوس X وابدأ الحجز</div>
+    <button class="btn" onclick="closeWelcome();openAccount()">إنشاء حساب للاستفادة بالنقاط والهدايا</button><button class="btn ghost" style="margin-top:10px" onclick="closeWelcome()">الدخول كضيف</button><button class="btn small ghost" style="margin-top:10px" onclick="closeWelcome();openAccount()">عندك حساب؟ تسجيل الدخول</button>
+    <div class="welcome-hint">400 نقطة = ساعة ببلاش. الاستبدال بمراجعة المكان، مش تلقائي.</div>
   </div>
 </div>
 
@@ -830,7 +830,7 @@ document.getElementById('welcome').addEventListener('click', e=>{ if(e.target.id
   sessionStorage.setItem('dugWelcomed','1');
   const logo=document.querySelector('header .logo');
   if(logo && logo.src) document.getElementById('welcomeLogo').src=logo.src;
-  setTimeout(()=>{ const w=document.getElementById('welcome'); if(w&&!isAdmin&&location.hash!=='#dug7-admin-x9k2') {if(!customerToken())openAccount();else w.classList.add('open');} }, 400);
+  setTimeout(()=>{ const w=document.getElementById('welcome'); if(w&&!isAdmin&&location.hash!=='#dug7-admin-x9k2') w.classList.add('open'); }, 400);
 })();
 
 setInterval(renderAll, 30000); // keep "busy until" fresh
