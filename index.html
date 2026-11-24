@@ -320,6 +320,7 @@ header .logo{width:94px;animation:none;filter:none;margin-bottom:20px}header{pad
   <nav class="does-nav" aria-label="أقسام DOES"><button type="button" onclick="jumpToBooking()">الحجز</button><button type="button" onclick="doesLoad('openMiniGame')">العب بلياردو</button><button type="button" onclick="doesLoad('openInvite')">دعوة للشلة</button><button type="button" onclick="doesLoad('openAllSections')">كل الأقسام ☰</button></nav><div id="sections"></div>
 
 <section class="deposit-box" id="resultCardSection"><h2 style="font-size:21px;margin-bottom:8px">مين كسب القعدة؟</h2><p style="font-size:14px;line-height:1.8;margin-bottom:13px">اكتب أساميكم المستعارة والنتيجة، واحفظ كارت للستوري بهوية DOES.</p><button class="btn" type="button" onclick="openResultCard()">اعمل كارت النتيجة</button><p class="note" style="margin-top:10px">بإدخال اللاعبين، مش نتيجة رسمية للمكان. مفيش نشر تلقائي.</p></section>
+<section class="deposit-box" id="howItWorks" aria-labelledby="howTitle"><h2 id="howTitle" style="font-size:21px;margin-bottom:8px">شرح السيستم</h2><p style="font-size:14px;line-height:1.8;margin-bottom:13px">شوف في أقل من دقيقة إزاي تحجز وتتابع طلبك وتجمع نقطك.</p><video id="howVideo" controls playsinline preload="none" poster="./does-explainer-poster.jpg" style="display:block;width:100%;max-width:340px;max-height:72vh;margin:0 auto;border-radius:14px;background:#000"><source src="./does-explainer.mp4" type="video/mp4">المتصفح مش بيعرض الفيديو.</video></section>
 <section class="deposit-box site-add-card" id="siteAddCard" aria-labelledby="siteAddTitle"><div style="display:flex;align-items:center;gap:13px;margin-bottom:12px"><img src="./does-icon-192.png" width="62" height="62" alt="أيقونة DOES" style="border-radius:15px"><div><h2 id="siteAddTitle" style="margin:0;font-size:20px">خلّينا أقرب بضغطة</h2><p style="color:var(--dim);font-size:13px;margin-top:5px">DOES على شاشة موبايلك</p></div></div><p style="font-size:14px;line-height:1.8;margin-bottom:12px">أضف الموقع للشاشة الرئيسية، وارجع للحجز بسهولة.</p><button class="btn" id="siteInstallButton" type="button" hidden>أضف DOES للشاشة الرئيسية</button><button class="btn ghost" type="button" onclick="openSiteAddHelp()">إزاي أضيفه؟</button><p class="note" style="margin-top:12px">اختصار للموقع أو تثبيت ويب حسب المتصفح، مش تطبيق من المتجر. الحجز ومراجعة التوفر محتاجين إنترنت.</p></section>
   <h2 id="feedbackTitle"><span class="bar"></span>رأيك يهمنا</h2>
   <div class="card feedback">
@@ -623,7 +624,8 @@ function openBooking(roomId){
     '<div id="returningCustomer" class="note" hidden>بياناتك محفوظة على الجهاز ده بس. <button type="button" class="btn small ghost" onclick="forgetCustomer()">مش انت؟ امسح البيانات</button></div>'+
     (bookingRoom.cat==='ps'?'<label>اللعبة اللي حابب تلعبها (اختياري)</label><input id="fGame" placeholder="اكتب اسم اللعبة" maxlength="80"><div class="note">FC 27 موجودة على البلايستيشن 5 في Galaxy Room. طلب اللعبة حسب التوفر.</div>':'')+
     '<div class="deposit-box" id="refBox"><label>كود دعوة من صاحبك (اختياري)</label><input id="fInvite" maxlength="14" placeholder="DU..." autocapitalize="characters" oninput="inviteChanged(this)"><div class="note">للعميل الجديد: خصم 10% بالكود مرة واحدة. صاحب الكود يكسب خصم 10% لحجزه الجاي بعد قبول حجزك. مفيش دعوة لنفسك أو جمع خصومات.</div><div id="myReferral"></div></div>'+
-    '<label>ملاحظات (اختياري)</label><input id="fNote" placeholder="ضيف ملاحظاتك او لو حابب نجهزلك حاجه معينه" maxlength="200">'+
+    '<label for="fOccasion">عندك مناسبة؟ (اختياري)</label><select id="fOccasion"><option value="">مفيش</option><option>عيد ميلاد</option><option>لمّة صحاب</option><option>نجاح أو تخرج</option><option>فريق أو شغل</option><option>مناسبة تانية</option></select><div class="note">بتظهر لصاحب المكان في ملاحظات الطلب بس. مفيش خصم أو هدية مضمونة بيها.</div>'+
+    '<label>ملاحظات (اختياري)</label><input id="fNote" placeholder="ضيف ملاحظاتك او لو حابب نجهزلك حاجه معينه" maxlength="160">'+
     '<div class="row2"><div><label>اليوم</label><input id="fDate" type="date" value="'+td+'" min="'+td+'"></div>'+
     '<div><label>من الساعة</label><select id="fStart">'+
       Array.from({length:24},(_,h)=>{ const v=String(h).padStart(2,'0')+':00'; return '<option value="'+v+'"'+(h===18?' selected':'')+'>'+fmtTime(v)+'</option>'; }).join('')+
@@ -683,7 +685,7 @@ function checkConflict(){
 async function submitBooking(){
   const name=document.getElementById('fName').value.trim();
   const phone=document.getElementById('fPhone').value.trim();
-  const note=document.getElementById('fNote').value.trim();
+  const noteRaw=document.getElementById('fNote').value.trim();const occ=(document.getElementById('fOccasion')?.value||'').trim();const note=occ?('مناسبة: '+occ+(noteRaw?' | '+noteRaw:'')):noteRaw;
   const game=(document.getElementById('fGame')?.value||'').trim();
   const date=document.getElementById('fDate').value;
   const start=document.getElementById('fStart').value;
