@@ -548,7 +548,7 @@ function openBooking(roomId){
     '<div class="today-bookings" id="fBooked"></div>'+
     '<div class="deposit-box" id="fDeposit" aria-live="polite"></div>'+
     '<div class="deposit-box"><b>قسّم الحساب</b><label for="splitCount">عدد الأشخاص، شامل نفسك</label><input id="splitCount" type="number" min="1" max="100" step="1" value="2" oninput="renderSplit()"><p id="splitResult" aria-live="polite"></p><div class="note">حسبة تقريبية بس، مش دفع أو تحصيل. المبلغ النهائي من السيرفر بعد مراجعة أي خصم.</div></div>'+
-    '<div class="deposit-box" id="fPoints"><b>كل حجز مقبول = 50 نقطة</b><div class="note">النقاط بتتضاف بعد ما المكان يقبل الحجز، مش بمجرد إرسال الطلب. اكتب رقم موبايل مصري صحيح عشان تتحسبلك.</div><p><b>400 نقطة = ساعة ببلاش في أي لعبة في المكان من اختيارك.</b></p><div class="note">الاستبدال بالتنسيق مع إدارة المكان بعد مراجعة الرصيد وتوفر المعاد. مفيش استبدال تلقائي على الموقع حالياً.</div></div>'+
+    '<div class="deposit-box" id="fPoints"><b>كل حجز مقبول = 50 نقطة</b><div class="note">النقاط بتتضاف بعد ما المكان يقبل الحجز، مش بمجرد إرسال الطلب. اكتب رقم موبايل مصري صحيح عشان تتحسبلك.</div><p><b>400 نقطة = ساعة ببلاش في أي لعبة في المكان من اختيارك.</b></p><div class="note" id="fPointsNote">لو معاك 400 نقطة وسجّلت دخولك بحسابك، تقدر تدفع بيها ساعة من الحجز هنا. المكان بيراجع الطلب، والنقاط بتتخصم بعد القبول بس.</div></div>'+
     '<div class="conflict" id="fConflict"></div>'+
     '<div id="fWait" hidden class="deposit-box"><b>المعاد ده محجوز</b><p>سجل اسمك ورقمك، ولو المعاد فضي المكان يقدر يكلمك على واتساب. دي قائمة انتظار، مش حجز أو ضمان للتوفر. متحولش عربون.</p><button id="waitJoinBtn" class="btn ghost" onclick="joinWaitlist()">سجل في قائمة الانتظار</button></div>'+
     '<div style="margin-top:18px"><button id="fSubmit" class="btn" onclick="submitBooking()">ابعت طلب الحجز</button></div>'+
@@ -613,7 +613,7 @@ async function submitBooking(){
   }
   if(!online){ serverBusy(); return; }
   let res;
-  try{ res = await rpc('dug_submit_request',{p:{accountToken:customerToken(),room:bookingRoom.id,name,phone,note,game,date,start,hours,inviteCode:document.getElementById('fInvite')?.value.trim()||'',useReward:!!document.getElementById('fUseReward')?.checked,customerKey:myRefFor(phone)?.key||''}}); }
+  try{ res = await rpc('dug_submit_request',{p:{accountToken:customerToken(),room:bookingRoom.id,name,phone,note,game,date,start,hours,inviteCode:document.getElementById('fInvite')?.value.trim()||'',useReward:!!document.getElementById('fUseReward')?.checked,usePoints:!!document.getElementById('fUsePoints')?.checked,customerKey:myRefFor(phone)?.key||''}}); }
   catch(e){ serverBusy(); return; }
   if(!res || !res.ok){
     if(res && res.error==='conflict'){
@@ -624,7 +624,7 @@ async function submitBooking(){
       return;
     }
     if(res&&res.error==='account_auth'){toast('جلسة الحساب انتهت، سجل دخولك تاني');return;}
-    if(res&&['bad_invite','invite_used','no_stack','reward_auth','no_reward'].includes(res.error)){toast(({bad_invite:'كود الدعوة مش صحيح أو دعوة لنفسك',invite_used:'خصم الدعوة للعميل الجديد مرة واحدة، أو فيه طلب بنفس الدعوة مستني',no_stack:'اختار خصم واحد بس',reward_auth:'خصمك محتاج الجهاز اللي سجلت بيه',no_reward:'مفيش خصم متاح دلوقتي'})[res.error]);return;}
+    if(res&&['bad_invite','invite_used','no_stack','reward_auth','no_reward','points_low','points_auth'].includes(res.error)){toast(({bad_invite:'كود الدعوة مش صحيح أو دعوة لنفسك',invite_used:'خصم الدعوة للعميل الجديد مرة واحدة، أو فيه طلب بنفس الدعوة مستني',no_stack:'اختار خصم واحد بس',reward_auth:'خصمك محتاج الجهاز اللي سجلت بيه',no_reward:'مفيش خصم متاح دلوقتي',points_low:'رصيدك مش كفاية دلوقتي (400 نقطة متاحة، وفيه طلب مستني بنقاطك؟)',points_auth:'سجّل دخولك بحسابك عشان تدفع بالنقاط'})[res.error]);return;}
     serverBusy(); return;
   }
   if(res.customerKey&&res.inviteCode)saveRef(phone,res.inviteCode,res.customerKey);
@@ -636,11 +636,11 @@ async function submitBooking(){
   const waText = encodeURIComponent('طلب حجز DOES Underground\nرقم الطلب: '+res.id+'\nالروم: '+bookingRoom.name+'\nالاسم: '+name+'\nاليوم: '+date+'\nمن: '+fmtTime(start)+'\nعدد الساعات: '+hours+(game?'\nاللعبة المطلوبة: '+game:'')+'\nإجمالي الحجز: '+money(total)+'\nالعربون المطلوب (50%): '+money(deposit)+'\nهرفق صورة تحويل العربون للمراجعة'+(note?('\nملاحظات: '+note):''));
   friendBookingText='طلب حجز في DOES Underground (لسه مستني تأكيد المكان)\n'+bookingRoom.name+'\n'+date+' من '+fmtTime(start)+' لمدة '+hours+' ساعة'+(game?'\nاللعبة المطلوبة: '+game:'');
   document.getElementById('modal').innerHTML =
-    '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت، في انتظار العربون</h4><p>+50 نقطة بعد قبول الحجز برقم موبايل مصري صحيح</p><p>400 نقطة = ساعة ببلاش في أي لعبة في المكان من اختيارك. الاستبدال مع إدارة المكان بعد مراجعة الرصيد والتوفر، مش تلقائي على الموقع.</p>'+
+    '<div class="success"><div class="big">🎮</div><h4>طلبك اتبعت، في انتظار العربون</h4><p>+50 نقطة بعد قبول الحجز برقم موبايل مصري صحيح</p><p>400 نقطة = ساعة ببلاش في أي لعبة في المكان من اختيارك. تقدر تدفعها من حسابك وقت الحجز.</p>'+
     '<p>'+bookingRoom.name+' · '+date+' من '+fmtTime(start)+' ('+hours+' س)</p>'+
-    (res.discountPercent?'<p>خصم 10% اتطبق · قبل الخصم '+money(res.originalAmount)+'</p>':'')+refSuccess(phone)+
-    '<div class="deposit-box"><b>إجمالي الحجز: '+money(total)+'</b><br>العربون (50%): <b>'+money(deposit)+'</b><br>حوّل العربون بفودافون كاش على<br><b dir="ltr" style="font-size:22px">'+DEPOSIT_NUMBER+'</b></div>'+
-    '<p>بعد التحويل، ابعت صورة العملية على واتساب المكان. الحجز مش مؤكد لحد ما المكان يراجع التحويل ويأكد المعاد. فتح واتساب لوحده مش تأكيد للدفع.</p>'+
+    (res.discountPercent?'<p>خصم 10% اتطبق · قبل الخصم '+money(res.originalAmount)+'</p>':'')+(res.pointsRedeemed?'<p>ساعة مدفوعة بـ400 نقطة · قبل الخصم '+money(res.originalAmount)+'. النقاط بتتخصم من رصيدك بس لما المكان يقبل الحجز.</p>':'')+refSuccess(phone)+
+    (total===0?'<div class="deposit-box"><b>إجمالي الحجز: '+money(total)+'</b><br>الحجز كله بنقاطك، مفيش عربون مطلوب.</div>':'<div class="deposit-box"><b>إجمالي الحجز: '+money(total)+'</b><br>العربون (50%): <b>'+money(deposit)+'</b><br>حوّل العربون بفودافون كاش على<br><b dir="ltr" style="font-size:22px">'+DEPOSIT_NUMBER+'</b></div>')+
+    (total===0?'<p>الحجز مش مؤكد لحد ما المكان يراجع الطلب ويأكد المعاد. ابعت تفاصيل الطلب على واتساب المكان لو حبيت.</p>':'<p>بعد التحويل، ابعت صورة العملية على واتساب المكان. الحجز مش مؤكد لحد ما المكان يراجع التحويل ويأكد المعاد. فتح واتساب لوحده مش تأكيد للدفع.</p>')+
     '<a class="btn green" style="text-decoration:none" href="https://wa.me/'+WA_NUMBER+'?text='+waText+'" target="_blank" rel="noopener">ابعت صورة التحويل على واتساب</a>'+
     '<button class="btn ghost" style="margin-top:10px" onclick="shareBooking()">شارك تفاصيل الطلب مع صحابك</button>'+
     '<div id="bookingShareFallback" class="share-fallback" hidden><label>انسخ تفاصيل الطلب</label><textarea readonly aria-label="تفاصيل الطلب للمشاركة"></textarea></div>'+
@@ -734,7 +734,7 @@ function renderAdmin(){
     const r = roomById(q.room);
     const pointPhone=egyptWhatsAppNumber(q.phone),pointValue=adminPointBalances&&pointPhone?Number(adminPointBalances[pointPhone]||0):null;
     const pointLine='<br><span class="deposit-status">'+(!pointPhone?'النقاط: رقم موبايل مصري كامل مطلوب':pointValue===null?'تعذر تحميل رصيد النقاط':'رصيد العميل: '+pointValue+' نقطة · +50 بعد القبول')+'</span>';
-    const discount=q.discountPercent?'<br><span class="deposit-status">خصم 10% ('+(q.discountKind==='invite'?'دعوة عميل جديد':'مكافأة دعوة')+') · قبل الخصم '+money(q.originalAmount)+'</span>':'';
+    const ptsBadge=q.pointsRedeemed?'<br><span class="deposit-status">ساعة مدفوعة بـ400 نقطة · قبل الخصم '+money(q.originalAmount)+' · النقاط بتتخصم عند القبول</span>':'';const discount=ptsBadge+(q.discountPercent?'<br><span class="deposit-status">خصم 10% ('+(q.discountKind==='invite'?'دعوة عميل جديد':'مكافأة دعوة')+') · قبل الخصم '+money(q.originalAmount)+'</span>':'');
     const dep = q.depositStatus==='awaiting_deposit' ? '<br><span class="deposit-status">في انتظار العربون · '+money(q.depositAmount)+' (50%) من '+money(q.totalAmount)+'</span>' : '';
     reqHtml += '<div class="req"><div><b>'+esc(q.name)+'</b> — '+r.name+'<br><span style="color:var(--dim);font-size:12.5px">'+q.date+' من '+fmtTime(q.start)+' ('+q.hours+' س)'+(q.phone?(' — '+esc(q.phone)):'')+(q.game?('<br>🎮 '+esc(q.game)):'')+(q.note?('<br>📝 '+esc(q.note)):'')+'</span>'+dep+discount+pointLine+'</div>'+
       '<div class="acts"><button class="btn small green" onclick="acceptReq(\''+q.id+'\')">'+(q.depositStatus==='awaiting_deposit'?'راجعت العربون · قبول':'قبول')+'</button>'+
@@ -971,9 +971,9 @@ function renderVisitsAdmin(){
  const n=x=>Number(x||0).toLocaleString('ar-EG'),box=(t,a,b)=>'<div style="flex:1;min-width:84px;background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center"><div style="font-size:12px;color:var(--dim)">'+t+'</div><div style="font-size:21px;font-weight:700;margin:4px 0">'+n(a)+'</div><div style="font-size:11px;color:var(--dim)">'+n(b)+' زيارة</div></div>';
  h+='<div style="display:flex;gap:8px;flex-wrap:wrap">'+box('النهارده',v.today_visitors,v.today_visits)+box('آخر 7 أيام',v.d7_visitors,v.d7_visits)+box('آخر 30 يوم',v.d30_visitors,v.d30_visits)+box('الإجمالي',v.all_visitors,v.all_visits)+'</div>';
  const d=v.daily||[],mx=Math.max(1,...d.map(x=>x.visitors));
- if(d.length)h+='<div style="margin-top:14px;font-size:13px">آخر 14 يوم (عدد الزوّار):</div><div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:8px;direction:ltr">'+d.map(x=>'<div title="'+x.day+': '+x.visitors+'" style="flex:1;background:linear-gradient(var(--pink),var(--blue));border-radius:4px 4px 0 0;height:'+Math.max(6,Math.round(x.visitors/mx*80))+'px"></div>').join('')+'</div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);direction:ltr;margin-top:3px"><span>'+d[0].day+'</span><span>'+d[d.length-1].day+'</span></div>';
+ if(d.length)h+='<div style="margin-top:14px;font-size:13px">آخر 14 يوم (زوّار كل يوم):</div><div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:8px;direction:ltr">'+d.map(x=>'<div title="'+x.day+': '+x.visitors+'" style="flex:1;background:linear-gradient(var(--pink),var(--blue));border-radius:4px 4px 0 0;height:'+Math.max(6,Math.round(x.visitors/mx*80))+'px"></div>').join('')+'</div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);direction:ltr;margin-top:3px"><span>'+d[0].day+'</span><span>'+d[d.length-1].day+'</span></div>';
  else h+='<p class="note" style="margin-top:12px">لسه مفيش زيارات متسجلة.</p>';
- return h+'<p class="note" style="margin-top:12px">العدّ بدأ من '+(v.since||'أول زيارة')+'. الزائر = موبايل أو متصفح واحد في اليوم، والزيارة = فتحة جديدة للموقع. دخولك كإدارة والروبوتات مش بتتحسب. لو حد مسح بيانات المتصفح أو دخل من جهاز تاني بيتحسب مرة جديدة.</p></div>';
+ return h+'<p class="note" style="margin-top:12px">العدّ بدأ من '+(v.since||'أول زيارة')+'. الزائر = متصفح أو موبايل واحد، بيتحسب مرة واحدة في أي فترة. الزيارة = فتحة جديدة للموقع (تاب جديد أو بعد قفل المتصفح، بحد أقصى 50 في اليوم لنفس الجهاز). الرابطين (surge وgithub) بيتحسبوا مع بعض، لكن اللي يفتح الاتنين بيتحسب مرتين، وكذلك مسح بيانات المتصفح أو جهاز تاني. دخولك كإدارة والروبوتات مش بتتحسب.</p></div>';
 }
 (function(){try{
  if(location.hostname==='localhost'||location.hostname==='127.0.0.1'||navigator.webdriver||/bot|crawl|spider|headless|preview|lighthouse/i.test(navigator.userAgent))return;
@@ -984,6 +984,25 @@ function renderVisitsAdmin(){
   sessionStorage.setItem('dugV','1');rpc('dug_track_visit',{v:id}).catch(()=>{sessionStorage.removeItem('dugV');});
  },2500);
 }catch(e){}})();
+</script><script>
+(function(){
+ const _ob=window.openBooking;if(typeof _ob!=='function')return;
+ window.openBooking=function(){const r=_ob.apply(this,arguments);let n=0;const t=setInterval(()=>{n++;if(document.getElementById('fPoints')){clearInterval(t);addRedeemBox();}else if(n>40)clearInterval(t);},50);return r;};
+ const _rd=window.renderDeposit;
+ window.renderDeposit=function(){_rd();const cb=document.getElementById('fUsePoints');if(!cb||!cb.checked||typeof bookingRoom==='undefined'||!bookingRoom)return;const el=document.getElementById('fDeposit');if(!el)return;const h=Number(document.getElementById('fHours').value),rate=Number(bookingRoom.price),full=Math.round(rate*h*100)/100,tot=Math.max(0,Math.round(rate*(h-1)*100)/100),dep=Math.round(tot*50)/100;el.innerHTML='<b class="ticket-title">معاينة تكلفة الطلب • لسه متبعتش</b><div class="note">السعر قبل النقاط: '+money(full)+' · ساعة مدفوعة بـ400 نقطة، وبيتأكد من السيرفر.</div><b>إجمالي الحجز: '+money(tot)+'</b><br>'+(tot===0?'الحجز كله بنقاطك، مفيش عربون.':'العربون (50%): <b>'+money(dep)+'</b><br>فودافون كاش: <b dir="ltr">'+DEPOSIT_NUMBER+'</b>')+'<div class="note">النقاط بتتخصم من رصيدك بعد ما المكان يقبل الحجز. الحجز مش مؤكد غير بعد مراجعة المكان.</div>';};
+ async function addRedeemBox(){
+  const box=document.getElementById('fPoints');if(!box||document.getElementById('fUsePoints')||document.getElementById('fPointsPay'))return;
+  const mk=h=>{const d=document.createElement('div');d.id='fPointsPay';d.style.marginTop='10px';d.innerHTML=h;box.appendChild(d);};
+  if(!customerToken()){mk('<div class="note">عشان تدفع ساعة بنقاطك، سجّل دخولك بحسابك الأول (حسابي).</div>');return;}
+  let j;try{j=await rpc('dug_customer_me',{t:customerToken()});}catch(e){return;}
+  if(!document.getElementById('fPoints')||document.getElementById('fPointsPay'))return;
+  if(!j||!j.ok){mk('<div class="note">سجّل دخولك بحسابك تاني عشان تدفع بالنقاط.</div>');return;}
+  const pts=Number(j.points)||0;
+  if(pts<400){mk('<div class="note">رصيدك '+pts+' نقطة. فاضلك '+(400-pts)+' على ساعة بنقاطك.</div>');return;}
+  mk('<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="fUsePoints" style="width:auto" onchange="if(this.checked){var i=document.getElementById(\'fInvite\'),r=document.getElementById(\'fUseReward\');if(i)i.value=\'\';if(r)r.checked=false;}renderDeposit();renderSplit()"> ادفع ساعة من الحجز بـ400 نقطة (رصيدك '+pts+')</label><div class="note">الساعة بتتخصم من إجمالي الحجز، والنقاط بتتخصم بعد ما المكان يقبل الحجز. مش بتتجمع مع خصم دعوة.</div>');
+ }
+ const _ic=window.inviteChanged;window.inviteChanged=function(el){const cb=document.getElementById('fUsePoints');if(cb&&el.value.trim())cb.checked=false;_ic(el);};
+})();
 </script></body>
 </html>
 
