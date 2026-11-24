@@ -198,6 +198,19 @@ button:focus-visible,.btn:focus-visible{outline:2px solid #58e6ff;outline-offset
 .game-cues{width:180px;right:max(15px,calc(50% - 740px));bottom:-35px;transform:rotate(12deg);opacity:.46}
 @media(max-width:1150px){.game-controller{left:-70px;width:240px;top:90px}.game-ping{right:-40px;width:165px;top:230px}.game-balls{left:-70px;width:210px;bottom:7%}.game-cues{right:-45px;width:150px;bottom:5%;opacity:.4}}
 @media(max-width:560px){.game-controller{width:180px;left:-43px;top:126px;opacity:.6}.game-ping{width:125px;right:-36px;top:340px;opacity:.48}.game-balls{width:160px;left:-38px;bottom:35px;opacity:.55}.game-cues{width:120px;right:-25px;bottom:50px;opacity:.42}}
+</style><style id="game-scenes-style">
+
+.card{padding-top:102px;overflow:visible;isolation:isolate;border-radius:20px;box-shadow:0 14px 30px #0003;transition:transform .3s}
+.card:before{content:'';position:absolute;top:72px;left:18px;right:18px;height:4px;border-radius:50%;background:#4069aa55;box-shadow:0 5px 15px #050812}
+.card .type{top:16px;left:14px}.mini-scene{position:absolute;top:7px;right:16px;width:120px;height:85px;pointer-events:none;filter:drop-shadow(0 10px 5px #0008);transform:rotate(-6deg);transition:transform .35s}.mini-scene svg{width:100%;height:100%;overflow:visible}.card.pressed{transform:translateY(-5px);border-color:#30d8e7;box-shadow:0 18px 35px #0008}.card.pressed .mini-scene{transform:translateX(-12px) rotate(10deg)}
+.card .btn{margin-top:3px}.card h3{margin-top:0} .grid{gap:20px}#fDeposit{position:relative;border:1px solid #7e6d46!important;background:linear-gradient(140deg,#232439,#151a2c)!important;border-radius:4px!important;padding:22px!important;margin:22px 0!important;outline:1px dashed #c8af70;outline-offset:-8px}#fDeposit:before,#fDeposit:after{content:'';position:absolute;top:45%;width:20px;height:20px;background:#0b1020;border-radius:50%}#fDeposit:before{left:-11px}#fDeposit:after{right:-11px}#modal:has(#fDeposit){border:10px solid #684c36!important;outline:3px solid #b58b5d;box-shadow:inset 0 0 0 8px #174b45,0 30px 90px #000b!important;padding:26px!important;background:radial-gradient(circle at 5px 5px,#050806 0 12px,transparent 13px),radial-gradient(circle at calc(100% - 5px) 5px,#050806 0 12px,transparent 13px),#0b1020!important}
+@media(max-width:600px){.card{padding-top:93px}.mini-scene{height:76px;width:110px}.card:before{top:68px}#modal:has(#fDeposit){border-width:7px!important;padding:20px!important}}
+@media(prefers-reduced-motion:reduce){.card,.mini-scene{transition:none}}
+
+#fDeposit > .ticket-title{display:block;color:#e8cc8b;margin-bottom:12px;border-bottom:1px dashed #93805c;padding-bottom:10px}
+.card:focus-within{border-color:#30d8e7}.card.scene-tap{transform:translateY(-5px);border-color:#30d8e7;box-shadow:0 18px 35px #0008}.card.scene-tap .mini-scene{transform:translateX(-12px) rotate(10deg)}
+@media(hover:hover){.card:hover .mini-scene{transform:translateX(-8px) rotate(5deg)}}
+@media(prefers-reduced-motion:reduce){.card:hover,.card.scene-tap{transform:none}.card.scene-tap .mini-scene,.card:hover .mini-scene{transform:rotate(-6deg)}}
 </style></head>
 <body><div class="gaming-objects" aria-hidden="true"><div class="game-object game-controller"><svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="pad" x2="1" y2="1"><stop stop-color="#173f68"/><stop offset="1" stop-color="#291938"/></linearGradient></defs><path d="M73 38C44 37 34 60 23 104L17 137C13 165 35 173 53 154L83 124H197L227 154C245 173 267 165 263 137L257 104C246 60 236 37 207 38L177 49H103Z" fill="url(#pad)" stroke="#429eff" stroke-width="4"/><path d="M112 38L119 28H161L168 38" fill="none" stroke="#a55eff" stroke-width="4"/><rect x="111" y="55" width="58" height="38" rx="8" fill="#11192e" stroke="#a572ca" stroke-width="2"/><path d="M55 70H69V84H83V98H69V112H55V98H41V84H55Z" fill="#0b1120" stroke="#6bc5ec" stroke-width="2"/><g fill="#121329" stroke-width="2.5"><circle cx="213" cy="72" r="8" stroke="#51e9c6"/><circle cx="231" cy="91" r="8" stroke="#ff6da5"/><circle cx="194" cy="91" r="8" stroke="#7396ff"/><circle cx="213" cy="110" r="8" stroke="#ffbd73"/></g><circle cx="101" cy="114" r="18" fill="#0b1120" stroke="#6e8aaf" stroke-width="3"/><circle cx="178" cy="114" r="18" fill="#0b1120" stroke="#6e8aaf" stroke-width="3"/><circle cx="101" cy="114" r="10" fill="#192d48"/><circle cx="178" cy="114" r="10" fill="#192d48"/></svg></div><div class="game-object game-ping"><svg viewBox="0 0 210 260" xmlns="http://www.w3.org/2000/svg"><g transform="rotate(-28 100 140)"><rect x="81" y="147" width="33" height="99" rx="12" fill="#ac7650" stroke="#ddb085" stroke-width="3"/><path d="M49 139C12 100 24 32 84 22C137 11 178 58 158 112C144 150 105 169 78 154Z" fill="#742747" stroke="#ff78ba" stroke-width="4"/><path d="M50 132C20 93 34 40 83 31" fill="none" stroke="#ff9ecb" stroke-opacity=".5" stroke-width="3"/><path d="M85 178H110M85 188H110M85 198H110" stroke="#53364a" stroke-width="3"/></g><circle cx="177" cy="47" r="17" fill="#ceeafa" stroke="#fff" stroke-width="2"/><path d="M165 39Q171 29 181 35" fill="none" stroke="#fff" stroke-width="3"/></svg></div><div class="game-object game-balls"><svg viewBox="0 0 260 210" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="ball"><stop stop-color="#425879"/><stop offset="1" stop-color="#090d1e"/></radialGradient></defs><circle cx="87" cy="112" r="65" fill="url(#ball)" stroke="#7890b2" stroke-width="3"/><circle cx="87" cy="104" r="27" fill="#dce5f5"/><text x="87" y="117" text-anchor="middle" fill="#101326" font-size="38" font-family="Arial" font-weight="bold">8</text><ellipse cx="58" cy="70" rx="14" ry="7" transform="rotate(-35 58 70)" fill="#afcbf2" opacity=".5"/><circle cx="184" cy="144" r="51" fill="#433a9c" stroke="#a799ff" stroke-width="3"/><path d="M139 125Q185 104 231 127L233 159Q181 179 136 156Z" fill="#cdd8ed"/><circle cx="184" cy="142" r="22" fill="#e4eaf7"/><text x="184" y="152" text-anchor="middle" fill="#24224b" font-size="28" font-family="Arial" font-weight="bold">12</text></svg></div><div class="game-object game-cues"><svg viewBox="0 0 190 420" xmlns="http://www.w3.org/2000/svg"><path d="M37 389L127 30" stroke="#bc8f63" stroke-width="10"/><path d="M37 389L61 294" stroke="#553a62" stroke-width="13"/><path d="M127 30L132 10" stroke="#63dbff" stroke-width="6"/><path d="M159 389L74 47" stroke="#d7ae7b" stroke-width="8"/><path d="M159 389L138 303" stroke="#6b4077" stroke-width="12"/><path d="M74 47L69 26" stroke="#bd81ff" stroke-width="5"/></svg></div></div><div class="arcade-scene" aria-hidden="true"><i class="neon-speck" style="--x:7%;--y:13%;--d:0.15;--delay:-0s"></i><i class="neon-speck" style="--x:36%;--y:30%;--d:0.19;--delay:-1s"></i><i class="neon-speck" style="--x:65%;--y:47%;--d:0.23;--delay:-2s"></i><i class="neon-speck" style="--x:94%;--y:64%;--d:0.27;--delay:-3s"></i><i class="neon-speck" style="--x:23%;--y:81%;--d:0.31;--delay:-4s"></i><i class="neon-speck" style="--x:52%;--y:98%;--d:0.35;--delay:-5s"></i><i class="neon-speck" style="--x:81%;--y:15%;--d:0.39;--delay:-6s"></i><i class="neon-speck" style="--x:10%;--y:32%;--d:0.43;--delay:-7s"></i><i class="neon-speck" style="--x:39%;--y:49%;--d:0.47;--delay:-8s"></i><i class="neon-speck" style="--x:68%;--y:66%;--d:0.51;--delay:-9s"></i></div>
 <div class="glow-bg"></div>
@@ -305,7 +318,7 @@ function bookingAmounts(rate,hours){ const total=Math.round(Number(rate)*Number(
 function renderDeposit(){
  const el=document.getElementById('fDeposit'); if(!el||!bookingRoom)return;
  const a=bookingAmounts(bookingRoom.price,document.getElementById('fHours').value);const discounted=!!document.getElementById('fInvite')?.value.trim()||!!document.getElementById('fUseReward')?.checked;const original=a.total;if(discounted){a.total=Math.round(a.total*90)/100;a.deposit=Math.round(a.total*50)/100;}
- el.innerHTML=(discounted?'<div class="note">السعر قبل الخصم: '+money(original)+' · خصم 10% مبدئي، بيتأكد من السيرفر بعد مراجعة الكود والاستحقاق.</div>':'')+'<b>إجمالي الحجز: '+money(a.total)+'</b><br>العربون (50%): <b>'+money(a.deposit)+'</b><br>فودافون كاش: <b dir="ltr">'+DEPOSIT_NUMBER+'</b><div class="note">ابعت الطلب الأول، وبعدها هتظهرلك خطوات تحويل العربون. الحجز مش مؤكد غير بعد مراجعة المكان.</div>';
+ el.innerHTML='<b class="ticket-title">معاينة تكلفة الطلب • لسه متبعتش</b>'+(discounted?'<div class="note">السعر قبل الخصم: '+money(original)+' · خصم 10% مبدئي، بيتأكد من السيرفر بعد مراجعة الكود والاستحقاق.</div>':'')+'<b>إجمالي الحجز: '+money(a.total)+'</b><br>العربون (50%): <b>'+money(a.deposit)+'</b><br>فودافون كاش: <b dir="ltr">'+DEPOSIT_NUMBER+'</b><div class="note">ابعت الطلب الأول، وبعدها هتظهرلك خطوات تحويل العربون. الحجز مش مؤكد غير بعد مراجعة المكان.</div>';
 }
 const SUPA_URL = 'https://vjvwjnnlmcofeufawnqq.supabase.co';
 const SUPA_KEY = 'sb_publishable_nzJJp96sUGVPMCs_bDUmoQ_13hM7juc';
@@ -436,6 +449,15 @@ function renderSummary(){
     '<div class="chip"><b>'+free+'</b> فاضي دلوقتي</div>'+
     '<div class="chip busy"><b>'+(ROOMS.length-free)+'</b> مشغول</div>';
 }
+function gameScene(cat,id){
+ const sel=cat==='ps'?'.game-controller svg':cat==='bil'?'.game-balls svg':'.game-ping svg';
+ const source=document.querySelector(sel);if(!source)return '';
+ let svg=source.outerHTML;const ids=[...svg.matchAll(/id="([^"]+)"/g)].map(x=>x[1]);
+ ids.forEach(old=>{const neo='scene-'+id+'-'+old;svg=svg.split('id="'+old+'"').join('id="'+neo+'"').split('url(#'+old+')').join('url(#'+neo+')');});
+ return '<div class="mini-scene" aria-hidden="true">'+svg+'</div>';
+}
+document.addEventListener('pointerdown',e=>{const c=e.target.closest('#sections .card');if(!c||matchMedia('(prefers-reduced-motion:reduce)').matches)return;c.classList.add('scene-tap');setTimeout(()=>c.classList.remove('scene-tap'),380);},{passive:true});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const c=e.target.closest('#sections .card');if(!c||matchMedia('(prefers-reduced-motion:reduce)').matches)return;c.classList.add('scene-tap');setTimeout(()=>c.classList.remove('scene-tap'),380);});
 function renderSections(){
   const el = document.getElementById('sections');
   let html='';
@@ -445,7 +467,7 @@ function renderSections(){
       const info = roomBusyInfo(r);
       const nb = nextBookingToday(r.id);
       const tb = bookingsFor(r.id, todayStr());
-      html += '<div class="card">';
+      html += '<div class="card">'+gameScene(r.cat,r.id);
       html += '<span class="type">'+r.type+(r.vip?' • VIP':'')+'</span>';
       html += '<h3>'+r.name+'</h3>';
       if(r.id==='galaxy') html += '<div class="note" style="color:#39e7ba;margin:0 0 10px">🎮 FC 27 متاحة هنا</div>';
