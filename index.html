@@ -353,6 +353,7 @@ let bookings  = [];      // [{id,room,name,phone,date,start,hours,ts}]
 let requests  = {};      // reqId -> {id,room,name,phone,date,start,hours,ts}
 let ads       = {banner:{active:false,img:'',url:'',text:''}};
 let isAdmin = location.hash === ADMIN_HASH;
+window.addEventListener('hashchange',()=>{ if((location.hash===ADMIN_HASH)!==isAdmin) location.reload(); });
 let adminOk = (localStorage.getItem('dugAdmin')==='1'||sessionStorage.getItem('dugAdmin')==='1') && !!(localStorage.getItem('dugTok')||sessionStorage.getItem('dugTok'));
 let online = false;
 let roomCfgMap = {};
@@ -857,15 +858,16 @@ async function tryLogin(){
 if(isAdmin && !adminOk){
   const w=document.createElement('div');
   w.id='loginWall';
-  w.style.cssText='position:fixed;inset:0;background:#05070fee;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px';
+  w.style.cssText='position:fixed;inset:0;background:#05070fee;z-index:200;display:flex;align-items:safe center;justify-content:center;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch';
   w.innerHTML='<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:30px 24px;width:100%;max-width:360px">'+
     '<h3 style="margin-bottom:4px">دخول الإدارة</h3><div class="sub" style="margin-bottom:16px">منطقة خاصة بصاحب المحل بس</div>'+
     '<label>اسم المستخدم</label><input id="loginU" value="admin" autocomplete="username" autocapitalize="none" spellcheck="false">'+
     '<label>كلمة السر</label><input id="loginP" type="password" autocomplete="current-password">'+
     '<div class="note">الدخول بيتحفظ على الجهاز ده لحد تسجيل الخروج أو انتهاء الجلسة. استخدم جهازك الشخصي بس.</div>'+
     '<div id="loginErr" style="color:var(--busy);font-size:13px;min-height:20px;margin-top:8px"></div>'+
-    '<button class="btn" onclick="tryLogin()">دخول</button></div>';
+    '<button class="btn" type="button" onclick="tryLogin()" style="margin-bottom:8px">دخول</button></div>';
   document.body.appendChild(w);
+  w.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();tryLogin();}});
 }
 if(isAdmin && adminOk) document.getElementById('adminBar').classList.add('open');
 renderAll();
