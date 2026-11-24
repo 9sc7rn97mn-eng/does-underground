@@ -13,16 +13,16 @@ let pool=null,poolRaf=0;
 function poolRack(){const b=[{x:330,y:630,vx:0,vy:0,cue:1,in:0}];let n=0;for(let r=0;r<3;r++)for(let k=0;k<=r;k++){b.push({x:330+(k-r/2)*37,y:260-r*33,vx:0,vy:0,cue:0,in:0,n:++n});}return b;}
 function openMiniGame(){
  const best=+(localStorage.getItem('does_pool_best')||0);
- doesOpen('<h3>ضربة بعد ضربة. ركّز.</h3><p class="note">اسحب من الكرة البيضا ناحية العكس، وسيب. كل ما تسحب أكتر الضربة أقوى.</p><div style="display:flex;justify-content:space-between;padding:14px 0;font-size:15px"><span>الكور اللي دخلت <b id="poolScore">0</b></span><span>الضربة <b id="poolShot">1</b> / 5</span><span>أحسن رقم <b id="poolBest">'+best+'</b></span></div><canvas id="poolCanvas" width="660" height="850" style="width:100%;border-radius:20px;border:1px solid #8c6a43;display:block;touch-action:none"></canvas><p class="note" id="poolMsg" style="margin-top:12px">للمتعة بس. مفيش فلوس أو جوائز، ومش مربوطة بالحجز أو النقاط. أحسن رقم محفوظ على موبايلك بس.</p><button class="btn" id="poolAgain" hidden onclick="openMiniGame()">العب تاني</button><button class="btn ghost" onclick="closeMiniGame()">إغلاق</button>');
+ doesOpen('<h3>ضربة بعد ضربة. ركّز.</h3><p class="note">اسحب من الكرة البيضا ناحية العكس، وسيب. كل ما تسحب أكتر الضربة أقوى.</p><div style="display:flex;justify-content:space-between;padding:14px 0;font-size:15px"><span>الكور اللي دخلت <b id="poolScore">0</b></span><span>الضربة <b id="poolShot">1</b> / 7</span><span>أحسن رقم <b id="poolBest">'+best+'</b></span></div><canvas id="poolCanvas" width="660" height="850" style="width:100%;border-radius:20px;border:1px solid #8c6a43;display:block;touch-action:none"></canvas><p class="note" id="poolMsg" style="margin-top:12px">للمتعة بس. مفيش فلوس أو جوائز، ومش مربوطة بالحجز أو النقاط. أحسن رقم محفوظ على موبايلك بس.</p><button class="btn" id="poolAgain" hidden onclick="openMiniGame()">العب تاني</button><button class="btn ghost" onclick="closeMiniGame()">إغلاق</button>');
  poolStart();
 }
 function closeMiniGame(){cancelAnimationFrame(poolRaf);pool=null;closeModal();}
 function poolStart(){
  const cv=document.getElementById('poolCanvas');pool={balls:poolRack(),shot:1,score:0,drag:null,moving:false,pocketedThisShot:0,over:false,cv};
  const pt=e=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*POOL.W/r.width,y:(e.clientY-r.top)*POOL.H/r.height};};
- cv.onpointerdown=e=>{if(!pool||pool.moving||pool.over)return;const p=pt(e),c=pool.balls[0];if(Math.hypot(p.x-c.x,p.y-c.y)<70){pool.drag=p;cv.setPointerCapture(e.pointerId);poolDraw();}};
+ cv.onpointerdown=e=>{if(!pool||pool.moving||pool.over)return;const p=pt(e),c=pool.balls[0];if(Math.hypot(p.x-c.x,p.y-c.y)<110){pool.drag=p;cv.setPointerCapture(e.pointerId);poolDraw();}};
  cv.onpointermove=e=>{if(pool&&pool.drag){pool.drag=pt(e);poolDraw();}};
- cv.onpointerup=e=>{if(!pool||!pool.drag)return;const c=pool.balls[0],p=pool.drag;pool.drag=null;let dx=c.x-p.x,dy=c.y-p.y;const d=Math.hypot(dx,dy);if(d<12){poolDraw();return;}const pw=Math.min(d,170)/170*26;c.vx=dx/d*pw;c.vy=dy/d*pw;pool.moving=true;pool.pocketedThisShot=0;document.getElementById('poolMsg').textContent='...';poolLoop();};
+ cv.onpointerup=e=>{if(!pool||!pool.drag)return;const c=pool.balls[0],p=pool.drag;pool.drag=null;let dx=c.x-p.x,dy=c.y-p.y;const d=Math.hypot(dx,dy);if(d<12){poolDraw();return;}const pw=Math.min(d,170)/170*20;c.vx=dx/d*pw;c.vy=dy/d*pw;pool.moving=true;pool.pocketedThisShot=0;document.getElementById('poolMsg').textContent='...';poolLoop();};
  poolDraw();
 }
 function poolLoop(){
@@ -31,12 +31,12 @@ function poolLoop(){
   for(const b of B){if(b.in)continue;b.x+=b.vx/3;b.y+=b.vy/3;}
   for(let i=0;i<B.length;i++){const a=B[i];if(a.in)continue;for(let j=i+1;j<B.length;j++){const b=B[j];if(b.in)continue;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<2*R&&d>0){const nx=dx/d,ny=dy/d,ov=2*R-d;a.x-=nx*ov/2;a.y-=ny*ov/2;b.x+=nx*ov/2;b.y+=ny*ov/2;const rv=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;if(rv>0){a.vx-=rv*nx;a.vy-=rv*ny;b.vx+=rv*nx;b.vy+=rv*ny;}}}}
   for(const b of B){if(b.in)continue;
-   for(const [px,py] of POOL.pockets){if(Math.hypot(b.x-px,b.y-py)<POOL.P-4){b.in=1;b.vx=b.vy=0;if(b.cue){pool.cueIn=1;}else{pool.score++;pool.pocketedThisShot++;}}}
+   for(const [px,py] of POOL.pockets){if(Math.hypot(b.x-px,b.y-py)<POOL.P+8){b.in=1;b.vx=b.vy=0;if(b.cue){pool.cueIn=1;}else{pool.score++;pool.pocketedThisShot++;}}}
    if(b.in)continue;
    if(b.x<24+R){b.x=24+R;b.vx=Math.abs(b.vx)*.9;}if(b.x>636-R){b.x=636-R;b.vx=-Math.abs(b.vx)*.9;}
    if(b.y<24+R){b.y=24+R;b.vy=Math.abs(b.vy)*.9;}if(b.y>826-R){b.y=826-R;b.vy=-Math.abs(b.vy)*.9;}}
  }
- let moving=false;for(const b of B){if(b.in)continue;b.vx*=.985;b.vy*=.985;if(Math.hypot(b.vx,b.vy)<.12){b.vx=b.vy=0;}else moving=true;}
+ let moving=false;for(const b of B){if(b.in)continue;b.vx*=.982;b.vy*=.982;if(Math.hypot(b.vx,b.vy)<.12){b.vx=b.vy=0;}else moving=true;}
  poolDraw();
  if(moving){poolRaf=requestAnimationFrame(poolLoop);return;}
  pool.moving=false;poolEndShot();
@@ -45,7 +45,7 @@ function poolEndShot(){
  const c=pool.balls[0];if(c.in){c.in=0;c.x=330;c.y=630;c.vx=c.vy=0;pool.cueIn=0;}
  document.getElementById('poolScore').textContent=pool.score;
  const left=pool.balls.filter(b=>!b.cue&&!b.in).length,msg=document.getElementById('poolMsg');
- if(pool.shot>=5||!left){
+ if(pool.shot>=7||!left){
   pool.over=true;const best=+(localStorage.getItem('does_pool_best')||0);let t='خلصت! دخّلت '+pool.score+' من 6 كور.';
   if(pool.score>best){localStorage.setItem('does_pool_best',pool.score);document.getElementById('poolBest').textContent=pool.score;t+=' رقم جديد على موبايلك!';}
   msg.textContent=t;document.getElementById('poolAgain').hidden=false;poolDraw();return;
@@ -56,11 +56,11 @@ function poolEndShot(){
 function poolDraw(){
  if(!pool)return;const c=pool.cv.getContext('2d'),B=pool.balls;c.clearRect(0,0,660,850);c.fillStyle='#241d1d';c.fillRect(0,0,660,850);
  const g=c.createLinearGradient(0,0,660,850);g.addColorStop(0,'#154e4e');g.addColorStop(1,'#062d33');c.fillStyle=g;c.fillRect(24,24,612,802);c.strokeStyle='#c7a46c';c.lineWidth=2;c.strokeRect(23,23,614,804);
- for(const [x,y] of POOL.pockets){c.fillStyle='#030d12';c.beginPath();c.arc(x,y,POOL.P-4,0,7);c.fill();}
+ for(const [x,y] of POOL.pockets){c.fillStyle='#030d12';c.beginPath();c.arc(x,y,POOL.P+4,0,7);c.fill();}
  c.save();c.fillStyle='#8bb4b222';c.font='bold 53px Arial';c.textAlign='center';c.fillText('DOES',330,440);c.restore();
  const col=['#d2a85e','#c97b9c','#8fa8e8','#cbb5f4','#e0a060','#7fc9b4','#e8e0a0'];
  for(const b of B){if(b.in)continue;c.fillStyle=b.cue?'#f6f4ee':col[(b.n||0)%col.length];c.beginPath();c.arc(b.x,b.y,POOL.R,0,7);c.fill();if(!b.cue){c.fillStyle='#101117';c.beginPath();c.arc(b.x,b.y,7,0,7);c.fill();}}
- if(pool.drag){const q=B[0],p=pool.drag;let dx=q.x-p.x,dy=q.y-p.y;const d=Math.hypot(dx,dy)||1,pw=Math.min(d,170);c.setLineDash([8,10]);c.strokeStyle='#ffffff77';c.lineWidth=2;c.beginPath();c.moveTo(q.x,q.y);c.lineTo(q.x+dx/d*420,q.y+dy/d*420);c.stroke();c.setLineDash([]);c.strokeStyle='#e7c98f';c.lineWidth=7;c.beginPath();c.moveTo(q.x-dx/d*(24+pw*.5),q.y-dy/d*(24+pw*.5));c.lineTo(q.x-dx/d*(24+pw*.5+120),q.y-dy/d*(24+pw*.5+120));c.stroke();}
+ if(pool.drag){const q=B[0],p=pool.drag;let dx=q.x-p.x,dy=q.y-p.y;const d=Math.hypot(dx,dy)||1,pw=Math.min(d,170);c.setLineDash([8,10]);c.strokeStyle='#ffffff77';c.lineWidth=2;c.beginPath();c.moveTo(q.x,q.y);c.lineTo(q.x+dx/d*700,q.y+dy/d*700);c.stroke();c.setLineDash([]);c.strokeStyle='#e7c98f';c.lineWidth=7;c.beginPath();c.moveTo(q.x-dx/d*(24+pw*.5),q.y-dy/d*(24+pw*.5));c.lineTo(q.x-dx/d*(24+pw*.5+120),q.y-dy/d*(24+pw*.5+120));c.stroke();}
 }
 /* ---------- personal invitation ---------- */
 function openInvite(){
